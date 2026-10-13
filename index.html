@@ -291,15 +291,19 @@
             transition: transform 0.1s ease, width 0.1s ease, height 0.1s ease;
         }
 
+        .Overlay {
+            color: #007bff;
+        }
+
         .modal-close-btn {
-            background: #dc3545; border: none;
+            background: white; border: none;
             color: white; font-size: 18px; font-weight: bold;
             cursor: pointer; border-radius: 50%;
             width: 30px; height: 30px;
             display: flex; align-items: center; justify-content: center;
             padding: 0; line-height: 1;
         }
-        .modal-close-btn:hover { background: #bd2130; }
+        .modal-close-btn:hover { background: white; }
 
         .modal-content ul { padding-left: 20px; line-height: 1.6; }
 
@@ -416,6 +420,9 @@
             </div>
             <hr style="border: none; border-top: 1px solid #ddd; margin: 10px 0 12px 0;">
             <div class="pdf-container" id="pdfContainer">
+                <div class="Overlay">
+                  <h4>loading...</h4>
+                </div>
                 <iframe id="pdfFrame" src=""></iframe>
             </div>
         </div>
