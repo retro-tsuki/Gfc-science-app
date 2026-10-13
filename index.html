@@ -194,6 +194,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         h1 { margin: 0; font-size: 1.5rem; }
         
@@ -201,8 +203,9 @@
             display: flex;
             gap: 8px;
             align-items: center;
+            flex-wrap: wrap;
         }
-        .help-btn, .schedule-btn {
+        .help-btn, .schedule-btn, .annual-btn, .weekly-btn {
             background-color: #6c757d;
             color: white;
             border: none;
@@ -214,6 +217,10 @@
         }
         .schedule-btn { background-color: #28a745; }
         .schedule-btn:active { background-color: #218838; }
+        .annual-btn { background-color: #17a2b8; }
+        .annual-btn:active { background-color: #138496; }
+        .weekly-btn { background-color: #fd7e14; }
+        .weekly-btn:active { background-color: #e36d0c; }
 
         .modal-overlay {
             display: none;
@@ -235,7 +242,7 @@
         }
 
         /* -------------------------------------------------- */
-        /* 📄 月間行事予定表モーダル専用カスタムスタイル       */
+        /* 📄 行事予定表モーダル専用カスタムスタイル           */
         /* -------------------------------------------------- */
         .modal-content.schedule-modal {
             max-width: 850px;
@@ -279,9 +286,10 @@
             width: 100%;
             border: 1px solid #ddd;
             border-radius: 8px;
-            overflow: auto; /* 拡大時やスクロール時に綺麗に追従 */
+            overflow: auto;
             background: #f8f9fa;
             position: relative;
+            -webkit-overflow-scrolling: touch;
         }
         .pdf-container iframe {
             width: 100%;
@@ -291,19 +299,24 @@
             transition: transform 0.1s ease, width 0.1s ease, height 0.1s ease;
         }
 
-        .Overlay {
-            color: #007bff;
-        }
-
+        /* 🎯 修正：白背景に黒文字（ダークグレー）の閉じるボタン */
         .modal-close-btn {
-            background: white; border: none;
-            color: white; font-size: 18px; font-weight: bold;
-            cursor: pointer; border-radius: 50%;
+            background: #ffffff; 
+            border: 1px solid #ced4da;
+            color: #333333; 
+            font-size: 18px; 
+            font-weight: bold;
+            cursor: pointer; 
+            border-radius: 50%;
             width: 30px; height: 30px;
             display: flex; align-items: center; justify-content: center;
             padding: 0; line-height: 1;
+            transition: background 0.2s, color 0.2s;
         }
-        .modal-close-btn:hover { background: white; }
+        .modal-close-btn:hover { 
+            background: #e9ecef; 
+            color: #000000;
+        }
 
         .modal-content ul { padding-left: 20px; line-height: 1.6; }
 
@@ -345,7 +358,9 @@
     <div class="header-container">
         <h1>🧪 科学部 予定管理</h1>
         <div class="header-buttons">
-            <button class="schedule-btn" id="openScheduleBtn">📄 月間行事予定表</button>
+            <button class="schedule-btn" id="openMonthlyBtn">📄 月間行事予定表</button>
+            <button class="annual-btn" id="openAnnualBtn">📅 年間行事予定表</button>
+            <button class="weekly-btn" id="openWeeklyBtn">📋 週間行事予定表</button>
             <button class="help-btn" id="openHelpBtn">❓ 使い方</button>
         </div>
     </div>
@@ -405,11 +420,11 @@
         </div>
     </div>
 
-    <!-- 📄 月間行事予定表モーダル -->
+    <!-- 📄 行事予定表共通モーダル -->
     <div class="modal-overlay" id="scheduleModal">
         <div class="modal-content schedule-modal" id="scheduleModalContent">
             <div class="schedule-header-row">
-                <h3 id="scheduleTitle">📄 月間行事予定表</h3>
+                <h3 id="scheduleTitle">📄 行事予定表</h3>
                 <div class="pdf-controls">
                     <button class="pdf-control-btn" id="zoomOutBtn" title="縮小">-</button>
                     <button class="pdf-control-btn" id="zoomResetBtn" title="ズームリセット">100%</button>
@@ -420,9 +435,6 @@
             </div>
             <hr style="border: none; border-top: 1px solid #ddd; margin: 10px 0 12px 0;">
             <div class="pdf-container" id="pdfContainer">
-                <div class="Overlay">
-                  <h4>loading...</h4>
-                </div>
                 <iframe id="pdfFrame" src=""></iframe>
             </div>
         </div>
@@ -505,7 +517,9 @@
         const closeHelpBtn = document.getElementById('closeHelpBtn');
         const helpModal = document.getElementById('helpModal');
 
-        const openScheduleBtn = document.getElementById('openScheduleBtn');
+        const openMonthlyBtn = document.getElementById('openMonthlyBtn');
+        const openAnnualBtn = document.getElementById('openAnnualBtn');
+        const openWeeklyBtn = document.getElementById('openWeeklyBtn');
         const closeScheduleBtn = document.getElementById('closeScheduleBtn');
         const scheduleModal = document.getElementById('scheduleModal');
         const scheduleTitle = document.getElementById('scheduleTitle');
@@ -518,10 +532,12 @@
         const zoomResetBtn = document.getElementById('zoomResetBtn');
         const fullscreenBtn = document.getElementById('fullscreenBtn');
 
-        let currentScale = 1.0;
+        const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        let currentScale = 1.33; // デフォルト100%基準
 
         function updateZoom(newScale) {
-          currentScale = Math.max(0.5, Math.min(3.0, newScale)); // 50%〜300%に制限
+          if (isTouchDevice) return;
+          currentScale = Math.max(0.5, Math.min(3.0, newScale));
           pdfFrame.style.width = `${(100 / currentScale)}%`;
           pdfFrame.style.height = `${(100 / currentScale)}%`;
           pdfFrame.style.transform = `scale(${currentScale})`;
@@ -549,9 +565,16 @@
           }
         });
 
-        // 🎯 常に同じ名前のファイルを置く場合（例: schedule.pdf）
-        // #view=FitH を付与して初期表示で幅にフィットさせる
-        const SCHEDULE_FILENAME = "schedule.pdf"; 
+        // 全画面表示になったときに自動的に100%サイズに調整
+        document.addEventListener('fullscreenchange', () => {
+          if (document.fullscreenElement) {
+            currentScale = 1.0;
+            if (!isTouchDevice) updateZoom(1.0);
+          } else {
+            currentScale = 1.33;
+            if (!isTouchDevice) updateZoom(1.33);
+          }
+        });
 
         openHelpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
         closeHelpBtn.addEventListener('click', () => helpModal.style.display = 'none');
@@ -559,22 +582,28 @@
           if (e.target === helpModal) helpModal.style.display = 'none';
         });
 
-        openScheduleBtn.addEventListener('click', async () => {
-          // 初期ズームをリセット
-          updateZoom(1.0);
+        // 📄 月間行事予定表ボタンの処理
+        openMonthlyBtn.addEventListener('click', async () => {
+          currentScale = 1.33;
+          if (!isTouchDevice) {
+            updateZoom(1.33);
+          } else {
+            pdfFrame.style.width = '100%';
+            pdfFrame.style.height = '100%';
+            pdfFrame.style.transform = 'none';
+          }
 
-          const pdfUrl = `./monthlySchedule/${SCHEDULE_FILENAME}#view=FitH`;
+          const pdfUrl = `./monthlySchedule/schedule.pdf`;
           scheduleTitle.textContent = "📄 月間行事予定表（読み込み中…）";
           pdfFrame.src = pdfUrl;
           scheduleModal.style.display = 'flex';
 
-          // 🎯 ファイルの最終更新日（Last-Modified）を自動取得して「〇月」を判定する
           try {
-            const res = await fetch(`./monthlySchedule/${SCHEDULE_FILENAME}`, { method: 'HEAD' });
+            const res = await fetch(pdfUrl, { method: 'HEAD' });
             const lastModified = res.headers.get('Last-Modified');
             if (lastModified) {
               const fileDate = new Date(lastModified);
-              const monthNum = fileDate.getMonth() + 1; // 0〜11月なので +1
+              const monthNum = fileDate.getMonth() + 1;
               scheduleTitle.textContent = `📄 月間行事予定表（${monthNum}月）`;
             } else {
               scheduleTitle.textContent = "📄 月間行事予定表";
@@ -582,6 +611,71 @@
           } catch (e) {
             console.warn("最終更新日の取得に失敗しました:", e);
             scheduleTitle.textContent = "📄 月間行事予定表";
+          }
+        });
+
+        // 📅 年間行事予定表ボタンの処理
+        openAnnualBtn.addEventListener('click', async () => {
+          currentScale = 1.33;
+          if (!isTouchDevice) {
+            updateZoom(1.33);
+          } else {
+            pdfFrame.style.width = '100%';
+            pdfFrame.style.height = '100%';
+            pdfFrame.style.transform = 'none';
+          }
+
+          const pdfUrl = `./annualSchedule/schedule.pdf`;
+          scheduleTitle.textContent = "📅 年間行事予定表（読み込み中…）";
+          pdfFrame.src = pdfUrl;
+          scheduleModal.style.display = 'flex';
+
+          try {
+            const res = await fetch(pdfUrl, { method: 'HEAD' });
+            const lastModified = res.headers.get('Last-Modified');
+            if (lastModified) {
+              const fileDate = new Date(lastModified);
+              const yearNum = fileDate.getFullYear();
+              scheduleTitle.textContent = `📅 年間行事予定表（${yearNum}年）`;
+            } else {
+              scheduleTitle.textContent = "📅 年間行事予定表";
+            }
+          } catch (e) {
+            console.warn("最終更新日の取得に失敗しました:", e);
+            scheduleTitle.textContent = "📅 年間行事予定表";
+          }
+        });
+
+        // 📋 週間行事予定表ボタンの処理
+        openWeeklyBtn.addEventListener('click', async () => {
+          currentScale = 1.33;
+          if (!isTouchDevice) {
+            updateZoom(1.33);
+          } else {
+            pdfFrame.style.width = '100%';
+            pdfFrame.style.height = '100%';
+            pdfFrame.style.transform = 'none';
+          }
+
+          const pdfUrl = `./weeklySchedule/schedule.pdf`;
+          scheduleTitle.textContent = "📋 週間行事予定表（読み込み中…）";
+          pdfFrame.src = pdfUrl;
+          scheduleModal.style.display = 'flex';
+
+          try {
+            const res = await fetch(pdfUrl, { method: 'HEAD' });
+            const lastModified = res.headers.get('Last-Modified');
+            if (lastModified) {
+              const fileDate = new Date(lastModified);
+              const monthNum = fileDate.getMonth() + 1;
+              const dayNum = fileDate.getDate();
+              scheduleTitle.textContent = `📋 週間行事予定表（${monthNum}月${dayNum}日更新）`;
+            } else {
+              scheduleTitle.textContent = "📋 週間行事予定表";
+            }
+          } catch (e) {
+            console.warn("最終更新日の取得に失敗しました:", e);
+            scheduleTitle.textContent = "📋 週間行事予定表";
           }
         });
 
