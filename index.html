@@ -215,12 +215,12 @@
             cursor: pointer;
             width: auto;
         }
+        .weekly-btn { background-color: #fd7e14; }
+        .weekly-btn:active { background-color: #e36d0c; }
         .schedule-btn { background-color: #28a745; }
         .schedule-btn:active { background-color: #218838; }
         .annual-btn { background-color: #17a2b8; }
         .annual-btn:active { background-color: #138496; }
-        .weekly-btn { background-color: #fd7e14; }
-        .weekly-btn:active { background-color: #e36d0c; }
 
         .modal-overlay {
             display: none;
@@ -299,7 +299,6 @@
             transition: transform 0.1s ease, width 0.1s ease, height 0.1s ease;
         }
 
-        /* 🎯 修正：白背景に黒文字（ダークグレー）の閉じるボタン */
         .modal-close-btn {
             background: #ffffff; 
             border: 1px solid #ced4da;
@@ -358,9 +357,9 @@
     <div class="header-container">
         <h1>🧪 科学部 予定管理</h1>
         <div class="header-buttons">
+            <button class="weekly-btn" id="openWeeklyBtn">📋 週間行事予定表</button>
             <button class="schedule-btn" id="openMonthlyBtn">📄 月間行事予定表</button>
             <button class="annual-btn" id="openAnnualBtn">📅 年間行事予定表</button>
-            <button class="weekly-btn" id="openWeeklyBtn">📋 週間行事予定表</button>
             <button class="help-btn" id="openHelpBtn">❓ 使い方</button>
         </div>
     </div>
@@ -517,9 +516,9 @@
         const closeHelpBtn = document.getElementById('closeHelpBtn');
         const helpModal = document.getElementById('helpModal');
 
+        const openWeeklyBtn = document.getElementById('openWeeklyBtn');
         const openMonthlyBtn = document.getElementById('openMonthlyBtn');
         const openAnnualBtn = document.getElementById('openAnnualBtn');
-        const openWeeklyBtn = document.getElementById('openWeeklyBtn');
         const closeScheduleBtn = document.getElementById('closeScheduleBtn');
         const scheduleModal = document.getElementById('scheduleModal');
         const scheduleTitle = document.getElementById('scheduleTitle');
@@ -580,6 +579,39 @@
         closeHelpBtn.addEventListener('click', () => helpModal.style.display = 'none');
         helpModal.addEventListener('click', (e) => {
           if (e.target === helpModal) helpModal.style.display = 'none';
+        });
+
+        // 📋 週間行事予定表ボタンの処理
+        openWeeklyBtn.addEventListener('click', async () => {
+          currentScale = 1.33;
+          if (!isTouchDevice) {
+            updateZoom(1.33);
+          } else {
+            pdfFrame.style.width = '100%';
+            pdfFrame.style.height = '100%';
+            pdfFrame.style.transform = 'none';
+          }
+
+          const pdfUrl = `./weeklySchedule/schedule.pdf`;
+          scheduleTitle.textContent = "📋 週間行事予定表（読み込み中…）";
+          pdfFrame.src = pdfUrl;
+          scheduleModal.style.display = 'flex';
+
+          try {
+            const res = await fetch(pdfUrl, { method: 'HEAD' });
+            const lastModified = res.headers.get('Last-Modified');
+            if (lastModified) {
+              const fileDate = new Date(lastModified);
+              const monthNum = fileDate.getMonth() + 1;
+              const dayNum = fileDate.getDate();
+              scheduleTitle.textContent = `📋 週間行事予定表（${monthNum}月${dayNum}日更新）`;
+            } else {
+              scheduleTitle.textContent = "📋 週間行事予定表";
+            }
+          } catch (e) {
+            console.warn("最終更新日の取得に失敗しました:", e);
+            scheduleTitle.textContent = "📋 週間行事予定表";
+          }
         });
 
         // 📄 月間行事予定表ボタンの処理
@@ -643,39 +675,6 @@
           } catch (e) {
             console.warn("最終更新日の取得に失敗しました:", e);
             scheduleTitle.textContent = "📅 年間行事予定表";
-          }
-        });
-
-        // 📋 週間行事予定表ボタンの処理
-        openWeeklyBtn.addEventListener('click', async () => {
-          currentScale = 1.33;
-          if (!isTouchDevice) {
-            updateZoom(1.33);
-          } else {
-            pdfFrame.style.width = '100%';
-            pdfFrame.style.height = '100%';
-            pdfFrame.style.transform = 'none';
-          }
-
-          const pdfUrl = `./weeklySchedule/schedule.pdf`;
-          scheduleTitle.textContent = "📋 週間行事予定表（読み込み中…）";
-          pdfFrame.src = pdfUrl;
-          scheduleModal.style.display = 'flex';
-
-          try {
-            const res = await fetch(pdfUrl, { method: 'HEAD' });
-            const lastModified = res.headers.get('Last-Modified');
-            if (lastModified) {
-              const fileDate = new Date(lastModified);
-              const monthNum = fileDate.getMonth() + 1;
-              const dayNum = fileDate.getDate();
-              scheduleTitle.textContent = `📋 週間行事予定表（${monthNum}月${dayNum}日更新）`;
-            } else {
-              scheduleTitle.textContent = "📋 週間行事予定表";
-            }
-          } catch (e) {
-            console.warn("最終更新日の取得に失敗しました:", e);
-            scheduleTitle.textContent = "📋 週間行事予定表";
           }
         });
 
