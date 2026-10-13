@@ -207,7 +207,13 @@
             align-items: center;
         }
         h1 { margin: 0; font-size: 1.5rem; }
-        .help-btn {
+        
+        .header-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .help-btn, .schedule-btn {
             background-color: #6c757d;
             color: white;
             border: none;
@@ -217,6 +223,11 @@
             cursor: pointer;
             width: auto;
         }
+        .schedule-btn {
+            background-color: #28a745;
+        }
+        .schedule-btn:active { background-color: #218838; }
+
         .modal-overlay {
             display: none;
             position: fixed;
@@ -235,6 +246,26 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
             position: relative;
         }
+        .modal-content.schedule-modal {
+            max-width: 750px;
+            height: 85vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .pdf-container {
+            flex-grow: 1;
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f8f9fa;
+        }
+        .pdf-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
         .modal-close-btn {
             position: absolute;
             top: 12px; right: 16px;
@@ -285,7 +316,10 @@
 
     <div class="header-container">
         <h1>🧪 科学部 予定管理</h1>
-        <button class="help-btn" id="openHelpBtn">❓ 使い方</button>
+        <div class="header-buttons">
+            <button class="schedule-btn" id="openScheduleBtn">📄 月間行事予定表</button>
+            <button class="help-btn" id="openHelpBtn">❓ 使い方</button>
+        </div>
     </div>
 
     <div id='calendar'></div>
@@ -294,12 +328,12 @@
         <h2>📅 予定を追加する</h2>
         
         <div class="form-group">
-            <label for="eventTitle">予定の名前（※重要な予定は先頭に * を付ける）</label>
+            <label for="eventTitle">予定の名前（※祝日は先頭に * を付ける）</label>
             <input type="text" id="eventTitle" placeholder="（例：夏合宿、*秋分の日）">
         </div>
 
         <div class="form-group">
-            <label>期間指定　一日だけなら↓のみ</label>
+            <label>期間指定</label>
             <div class="form-row">
                 <div class="field-box"><input type="date" id="eventStartDate"></div>
                 <div class="range-separator">〜</div>
@@ -326,17 +360,30 @@
         <button class="submit-btn" id="addBtn">カレンダーに追加</button>
     </div>
 
+    <!-- 使い方モーダル -->
     <div class="modal-overlay" id="helpModal">
         <div class="modal-content">
             <button class="modal-close-btn" id="closeHelpBtn">&times;</button>
             <h3>📖 予定管理の使い方</h3>
             <ul>
                 <li><strong>予定の確認:</strong> カレンダー上で科学部の予定を確認できます。</li>
-                <li><strong>重要な予定:</strong> 予定名の先頭に <code>*</code> を入力すると赤背景として登録されます。</li>
+                <li><strong>祝日の登録:</strong> 予定名の先頭に <code>*</code> を入力すると赤背景（祝日）として登録されます。</li>
                 <li><strong>過去の予定:</strong> 既に終了した過去の予定は自動的にグレーアウト表示されます。</li>
                 <li><strong>予定の追加:</strong> フォームから「予定名」「期間」「時間」を設定して追加します。</li>
                 <li><strong>予定の削除:</strong> カレンダー上の予定をクリックして削除します。</li>
             </ul>
+        </div>
+    </div>
+
+    <!-- 📄 月間行事予定表モーダル -->
+    <div class="modal-overlay" id="scheduleModal">
+        <div class="modal-content schedule-modal">
+            <button class="modal-close-btn" id="closeScheduleBtn">&times;</button>
+            <h3 id="scheduleTitle">📄 月間行事予定表</h3>
+            <hr style="border: none; border-top: 1px solid #ddd; margin: 10px 0 15px 0;">
+            <div class="pdf-container">
+                <iframe id="pdfFrame" src=""></iframe>
+            </div>
         </div>
     </div>
 
@@ -412,21 +459,67 @@
       }
 
       document.addEventListener('DOMContentLoaded', function() {
+        // --- モーダル関連の処理 ---
         const openHelpBtn = document.getElementById('openHelpBtn');
         const closeHelpBtn = document.getElementById('closeHelpBtn');
         const helpModal = document.getElementById('helpModal');
 
-        const allDayCheck = document.getElementById('allDayCheck');
-        const eventStartTime = document.getElementById('eventStartTime');
-        const eventEndTime = document.getElementById('eventEndTime');
-        const eventStartDate = document.getElementById('eventStartDate');
-        const eventEndDate = document.getElementById('eventEndDate');
+        const openScheduleBtn = document.getElementById('openScheduleBtn');
+        const closeScheduleBtn = document.getElementById('closeScheduleBtn');
+        const scheduleModal = document.getElementById('scheduleModal');
+        const scheduleTitle = document.getElementById('scheduleTitle');
+        const pdfFrame = document.getElementById('pdfFrame');
+
+        // 🎯 常に同じ名前のファイルを置く場合（例: schedule.pdf）
+        const SCHEDULE_FILENAME = "schedule.pdf"; 
 
         openHelpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
         closeHelpBtn.addEventListener('click', () => helpModal.style.display = 'none');
         helpModal.addEventListener('click', (e) => {
           if (e.target === helpModal) helpModal.style.display = 'none';
         });
+
+        openScheduleBtn.addEventListener('click', async () => {
+          const pdfUrl = `./monthlySchedule/${SCHEDULE_FILENAME}`;
+          scheduleTitle.textContent = "📄 月間行事予定表（読み込み中…）";
+          pdfFrame.src = pdfUrl;
+          scheduleModal.style.display = 'flex';
+
+          // 🎯 ファイルの最終更新日（Last-Modified）を自動取得して「〇月」を判定する
+          try {
+            const res = await fetch(pdfUrl, { method: 'HEAD' });
+            const lastModified = res.headers.get('Last-Modified');
+            if (lastModified) {
+              const fileDate = new Date(lastModified);
+              const monthNum = fileDate.getMonth() + 1; // 0〜11月なので +1
+              scheduleTitle.textContent = `📄 月間行事予定表（${monthNum}月）`;
+            } else {
+              scheduleTitle.textContent = "📄 月間行事予定表";
+            }
+          } catch (e) {
+            console.warn("最終更新日の取得に失敗しました:", e);
+            scheduleTitle.textContent = "📄 月間行事予定表";
+          }
+        });
+
+        closeScheduleBtn.addEventListener('click', () => {
+          scheduleModal.style.display = 'none';
+          pdfFrame.src = "";
+        });
+
+        scheduleModal.addEventListener('click', (e) => {
+          if (e.target === scheduleModal) {
+            scheduleModal.style.display = 'none';
+            pdfFrame.src = "";
+          }
+        });
+
+        // --- フォーム関連の処理 ---
+        const allDayCheck = document.getElementById('allDayCheck');
+        const eventStartTime = document.getElementById('eventStartTime');
+        const eventEndTime = document.getElementById('eventEndTime');
+        const eventStartDate = document.getElementById('eventStartDate');
+        const eventEndDate = document.getElementById('eventEndDate');
 
         allDayCheck.addEventListener('change', function() {
           const isAllDay = this.checked;
@@ -503,20 +596,17 @@
             const el = arg.el;
             const rawTitle = arg.event.title || '';
 
-            // 🎯 今日より前の過去予定かを判定
             const now = new Date();
-            now.setHours(0, 0, 0, 0); // 本日の0時0分0秒
+            now.setHours(0, 0, 0, 0);
 
             const eventTargetDate = arg.event.end ? new Date(arg.event.end) : new Date(arg.event.start);
             if (arg.event.allDay && arg.event.end) {
-              // 終日予定の end は翌日0時を指すため1ミリ秒引いて比較
               eventTargetDate.setTime(eventTargetDate.getTime() - 1);
             }
 
             if (eventTargetDate < now) {
               el.classList.add('is-past');
             } else if (rawTitle.startsWith('*')) {
-              // 今日以降の祝日のみ赤背景を適用
               el.classList.add('is-holiday');
             }
 
