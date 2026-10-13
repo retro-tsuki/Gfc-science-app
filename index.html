@@ -28,10 +28,10 @@
         /* 🎯 過去予定のグレーアウトスタイル                 */
         /* -------------------------------------------------- */
         .fc-event.is-past {
-            background-color: #9e9e9e !important; /* グレー背景 */
+            background-color: #9e9e9e !important;
             border-color: #9e9e9e !important;
             color: #ffffff !important;
-            opacity: 0.6 !important;             /* 過去予定を半透明化 */
+            opacity: 0.6 !important;
         }
         .fc-event.is-past .fc-event-text-block {
             color: #ffffff !important;
@@ -41,7 +41,7 @@
         /* 🎯 祝日スタイル（*から始まる予定）                   */
         /* -------------------------------------------------- */
         .fc-event.is-holiday {
-            background-color: #dc3545 !important; /* 赤色背景 */
+            background-color: #dc3545 !important;
             border-color: #dc3545 !important;
             color: #ffffff !important;
         }
@@ -67,13 +67,11 @@
             width: 100%;
         }
 
-        /* 青丸（Dot）の位置固定 */
         .fc-daygrid-event-dot {
             flex-shrink: 0;
             margin-right: 4px;
         }
 
-        /* 可視領域ラッパー */
         .fc-event-scroll-wrapper {
             overflow: hidden;
             white-space: nowrap;
@@ -81,7 +79,6 @@
             min-width: 0;
         }
 
-        /* アニメーション用トラック */
         .fc-event-scroll-content {
             display: inline-flex !important;
             white-space: nowrap !important;
@@ -94,26 +91,18 @@
             flex-shrink: 0;
         }
 
-        /* はみ出ている要素（.has-overflow）のみ弾幕発動 */
         .fc-event.has-overflow .fc-event-scroll-content {
             animation: seamless-danmaku-pause 10s linear infinite;
         }
 
-        /* ホバー・タップ時に一時停止 */
         .fc-event:hover .fc-event-scroll-content {
             animation-play-state: paused;
         }
 
         @keyframes seamless-danmaku-pause {
-            0% {
-                transform: translateX(0%);
-            }
-            15% {
-                transform: translateX(0%); /* 最初の約1.5秒は静止（硬直時間） */
-            }
-            100% {
-                transform: translateX(-50%); /* ぴったり1ブロック分移動して滑らかにループ */
-            }
+            0% { transform: translateX(0%); }
+            15% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
         }
 
         /* -------------------------------------------------- */
@@ -223,9 +212,7 @@
             cursor: pointer;
             width: auto;
         }
-        .schedule-btn {
-            background-color: #28a745;
-        }
+        .schedule-btn { background-color: #28a745; }
         .schedule-btn:active { background-color: #218838; }
 
         .modal-overlay {
@@ -246,37 +233,74 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
             position: relative;
         }
+
+        /* -------------------------------------------------- */
+        /* 📄 月間行事予定表モーダル専用カスタムスタイル       */
+        /* -------------------------------------------------- */
         .modal-content.schedule-modal {
-            max-width: 750px;
-            height: 85vh;
+            max-width: 850px;
+            height: 88vh;
             display: flex;
             flex-direction: column;
+            padding: 20px;
         }
+        .schedule-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .modal-content h3 {
+            margin: 0; font-size: 1.2rem;
+            color: #333;
+        }
+        .pdf-controls {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .pdf-control-btn {
+            background: #f8f9fa;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #333;
+            transition: background 0.2s;
+        }
+        .pdf-control-btn:hover { background: #e2e6ea; }
+        .pdf-control-btn:active { background: #d6dbdf; }
+
         .pdf-container {
             flex-grow: 1;
             width: 100%;
             border: 1px solid #ddd;
             border-radius: 8px;
-            overflow: hidden;
+            overflow: auto; /* 拡大時やスクロール時に綺麗に追従 */
             background: #f8f9fa;
+            position: relative;
         }
         .pdf-container iframe {
             width: 100%;
             height: 100%;
             border: none;
+            transform-origin: top left;
+            transition: transform 0.1s ease, width 0.1s ease, height 0.1s ease;
         }
 
         .modal-close-btn {
-            position: absolute;
-            top: 12px; right: 16px;
-            background: none; border: none;
-            font-size: 24px; font-weight: bold; color: #888;
-            cursor: pointer; width: auto; padding: 0; line-height: 1;
+            background: #dc3545; border: none;
+            color: white; font-size: 18px; font-weight: bold;
+            cursor: pointer; border-radius: 50%;
+            width: 30px; height: 30px;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0; line-height: 1;
         }
-        .modal-content h3 {
-            margin-top: 0; font-size: 1.25rem;
-            border-bottom: 2px solid #007bff; padding-bottom: 8px;
-        }
+        .modal-close-btn:hover { background: #bd2130; }
+
         .modal-content ul { padding-left: 20px; line-height: 1.6; }
 
         .loading-overlay {
@@ -363,8 +387,10 @@
     <!-- 使い方モーダル -->
     <div class="modal-overlay" id="helpModal">
         <div class="modal-content">
-            <button class="modal-close-btn" id="closeHelpBtn">&times;</button>
-            <h3>📖 予定管理の使い方</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="margin: 0;">📖 予定管理の使い方</h3>
+                <button class="modal-close-btn" id="closeHelpBtn">&times;</button>
+            </div>
             <ul>
                 <li><strong>予定の確認:</strong> カレンダー上で科学部の予定を確認できます。</li>
                 <li><strong>祝日の登録:</strong> 予定名の先頭に <code>*</code> を入力すると赤背景（祝日）として登録されます。</li>
@@ -377,11 +403,19 @@
 
     <!-- 📄 月間行事予定表モーダル -->
     <div class="modal-overlay" id="scheduleModal">
-        <div class="modal-content schedule-modal">
-            <button class="modal-close-btn" id="closeScheduleBtn">&times;</button>
-            <h3 id="scheduleTitle">📄 月間行事予定表</h3>
-            <hr style="border: none; border-top: 1px solid #ddd; margin: 10px 0 15px 0;">
-            <div class="pdf-container">
+        <div class="modal-content schedule-modal" id="scheduleModalContent">
+            <div class="schedule-header-row">
+                <h3 id="scheduleTitle">📄 月間行事予定表</h3>
+                <div class="pdf-controls">
+                    <button class="pdf-control-btn" id="zoomOutBtn" title="縮小">-</button>
+                    <button class="pdf-control-btn" id="zoomResetBtn" title="ズームリセット">100%</button>
+                    <button class="pdf-control-btn" id="zoomInBtn" title="拡大">+</button>
+                    <button class="pdf-control-btn" id="fullscreenBtn" title="全画面表示">⛶ 全画面</button>
+                    <button class="modal-close-btn" id="closeScheduleBtn">&times;</button>
+                </div>
+            </div>
+            <hr style="border: none; border-top: 1px solid #ddd; margin: 10px 0 12px 0;">
+            <div class="pdf-container" id="pdfContainer">
                 <iframe id="pdfFrame" src=""></iframe>
             </div>
         </div>
@@ -469,8 +503,47 @@
         const scheduleModal = document.getElementById('scheduleModal');
         const scheduleTitle = document.getElementById('scheduleTitle');
         const pdfFrame = document.getElementById('pdfFrame');
+        const pdfContainer = document.getElementById('pdfContainer');
+
+        // PDFの拡大・全画面関連の要素
+        const zoomInBtn = document.getElementById('zoomInBtn');
+        const zoomOutBtn = document.getElementById('zoomOutBtn');
+        const zoomResetBtn = document.getElementById('zoomResetBtn');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+        let currentScale = 1.0;
+
+        function updateZoom(newScale) {
+          currentScale = Math.max(0.5, Math.min(3.0, newScale)); // 50%〜300%に制限
+          pdfFrame.style.width = `${(100 / currentScale)}%`;
+          pdfFrame.style.height = `${(100 / currentScale)}%`;
+          pdfFrame.style.transform = `scale(${currentScale})`;
+          zoomResetBtn.textContent = `${Math.round(currentScale * 100)}%`;
+        }
+
+        zoomInBtn.addEventListener('click', () => updateZoom(currentScale + 0.25));
+        zoomOutBtn.addEventListener('click', () => updateZoom(currentScale - 0.25));
+        zoomResetBtn.addEventListener('click', () => updateZoom(1.0));
+
+        // 全画面表示の切り替え
+        fullscreenBtn.addEventListener('click', () => {
+          if (!document.fullscreenElement) {
+            if (pdfContainer.requestFullscreen) {
+              pdfContainer.requestFullscreen();
+            } else if (pdfContainer.webkitRequestFullscreen) {
+              pdfContainer.webkitRequestFullscreen();
+            }
+          } else {
+            if (document.exitFullscreen) {
+              document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+              document.webkitExitFullscreen();
+            }
+          }
+        });
 
         // 🎯 常に同じ名前のファイルを置く場合（例: schedule.pdf）
+        // #view=FitH を付与して初期表示で幅にフィットさせる
         const SCHEDULE_FILENAME = "schedule.pdf"; 
 
         openHelpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
@@ -480,14 +553,17 @@
         });
 
         openScheduleBtn.addEventListener('click', async () => {
-          const pdfUrl = `./monthlySchedule/${SCHEDULE_FILENAME}`;
+          // 初期ズームをリセット
+          updateZoom(1.0);
+
+          const pdfUrl = `./monthlySchedule/${SCHEDULE_FILENAME}#view=FitH`;
           scheduleTitle.textContent = "📄 月間行事予定表（読み込み中…）";
           pdfFrame.src = pdfUrl;
           scheduleModal.style.display = 'flex';
 
           // 🎯 ファイルの最終更新日（Last-Modified）を自動取得して「〇月」を判定する
           try {
-            const res = await fetch(pdfUrl, { method: 'HEAD' });
+            const res = await fetch(`./monthlySchedule/${SCHEDULE_FILENAME}`, { method: 'HEAD' });
             const lastModified = res.headers.get('Last-Modified');
             if (lastModified) {
               const fileDate = new Date(lastModified);
@@ -505,12 +581,14 @@
         closeScheduleBtn.addEventListener('click', () => {
           scheduleModal.style.display = 'none';
           pdfFrame.src = "";
+          if (document.fullscreenElement) document.exitFullscreen();
         });
 
         scheduleModal.addEventListener('click', (e) => {
           if (e.target === scheduleModal) {
             scheduleModal.style.display = 'none';
             pdfFrame.src = "";
+            if (document.fullscreenElement) document.exitFullscreen();
           }
         });
 
@@ -558,7 +636,6 @@
             right: 'today'
           },
 
-          // 🎯 初期描画（祝日判定 ＆ タイトル調整 ＆ 単一ブロック出力）
           eventContent: function(arg) {
             let nodes = [];
 
@@ -591,7 +668,6 @@
             return { domNodes: nodes };
           },
 
-          // 🎯 幅判定 ＆ 祝日 ＆ 過去予定（is-past）の動的判定
           eventDidMount: function(arg) {
             const el = arg.el;
             const rawTitle = arg.event.title || '';
