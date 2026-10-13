@@ -279,9 +279,10 @@
             width: 100%;
             border: 1px solid #ddd;
             border-radius: 8px;
-            overflow: auto; /* 拡大時やスクロール時に綺麗に追従 */
+            overflow: auto;
             background: #f8f9fa;
             position: relative;
+            -webkit-overflow-scrolling: touch; /* スマホでの滑らかなスクロール */
         }
         .pdf-container iframe {
             width: 100%;
@@ -511,10 +512,17 @@
         const zoomResetBtn = document.getElementById('zoomResetBtn');
         const fullscreenBtn = document.getElementById('fullscreenBtn');
 
-        let currentScale = 1.0;
+        // タッチデバイス（スマホ・タブレット）かどうかを判定
+        const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
+        // デフォルトの倍率を従来より大きく（約1.33倍＝旧75%の小ささを100%の基準サイズに格上げ）
+        let currentScale = 1.33;
 
         function updateZoom(newScale) {
-          currentScale = Math.max(0.5, Math.min(3.0, newScale)); // 50%〜300%に制限
+          // タッチデバイスではCSS変形ズームを行わず、ブラウザ標準のピンチインを完全に有効にする
+          if (isTouchDevice) return;
+
+          currentScale = Math.max(0.5, Math.min(3.0, newScale));
           pdfFrame.style.width = `${(100 / currentScale)}%`;
           pdfFrame.style.height = `${(100 / currentScale)}%`;
           pdfFrame.style.transform = `scale(${currentScale})`;
@@ -542,8 +550,22 @@
           }
         });
 
-        // 🎯 常に同じ名前のファイルを置く場合（例: schedule.pdf）
-        // #view=FitH を付与して初期表示で幅にフィットさせる
+        // 🎯 全画面表示になったときに自動的に「もともとの100%サイズ」に調整する
+        document.addEventListener('fullscreenchange', () => {
+          if (document.fullscreenElement) {
+            currentScale = 1.0;
+            if (!isTouchDevice) {
+              updateZoom(1.0);
+            }
+          } else {
+            // 全画面解除時は好みのデフォルト（1.33）に戻す
+            currentScale = 1.33;
+            if (!isTouchDevice) {
+              updateZoom(1.33);
+            }
+          }
+        });
+
         const SCHEDULE_FILENAME = "schedule.pdf"; 
 
         openHelpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
@@ -553,10 +575,18 @@
         });
 
         openScheduleBtn.addEventListener('click', async () => {
-          // 初期ズームをリセット
-          updateZoom(1.0);
+          // 初期ズームをデフォルト（1.33倍：旧75%を100%基準に）にセット
+          currentScale = 1.33;
+          if (!isTouchDevice) {
+            updateZoom(1.33);
+          } else {
+            // スマホでは変形を解除してブラウザ標準のピンチインに委ねる
+            pdfFrame.style.width = '100%';
+            pdfFrame.style.height = '100%';
+            pdfFrame.style.transform = 'none';
+          }
 
-          const pdfUrl = `./monthlySchedule/${SCHEDULE_FILENAME}#view=FitH`;
+          const pdfUrl = `./monthlySchedule/${SCHEDULE_FILENAME}`;
           scheduleTitle.textContent = "📄 月間行事予定表（読み込み中…）";
           pdfFrame.src = pdfUrl;
           scheduleModal.style.display = 'flex';
