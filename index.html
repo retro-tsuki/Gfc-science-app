@@ -511,14 +511,14 @@
         const zoomResetBtn = document.getElementById('zoomResetBtn');
         const fullscreenBtn = document.getElementById('fullscreenBtn');
 
-        let currentScale = 0.75;
+        let currentScale = 1.0;
 
         function updateZoom(newScale) {
-          currentScale = Math.max(0.25, Math.min(2.75, newScale)); // 50%〜300%に制限
-          pdfFrame.style.width = `${(75 / currentScale)}%`;
-          pdfFrame.style.height = `${(75 / currentScale)}%`;
+          currentScale = Math.max(0.5, Math.min(3.0, newScale)); // 50%〜300%に制限
+          pdfFrame.style.width = `${(100 / currentScale)}%`;
+          pdfFrame.style.height = `${(100 / currentScale)}%`;
           pdfFrame.style.transform = `scale(${currentScale})`;
-          zoomResetBtn.textContent = `${Math.round(currentScale * 75)}%`;
+          zoomResetBtn.textContent = `${Math.round(currentScale * 100)}%`;
         }
 
         zoomInBtn.addEventListener('click', () => updateZoom(currentScale + 0.25));
@@ -554,7 +554,7 @@
 
         openScheduleBtn.addEventListener('click', async () => {
           // 初期ズームをリセット
-          updateZoom(0.75);
+          updateZoom(1.0);
 
           const pdfUrl = `./monthlySchedule/${SCHEDULE_FILENAME}#view=FitH`;
           scheduleTitle.textContent = "📄 月間行事予定表（読み込み中…）";
