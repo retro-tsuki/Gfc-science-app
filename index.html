@@ -3,9 +3,13 @@
 <head>
     <meta charset='utf-8' />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://maps.zaritsuri.com/schedule/" />
+    <meta property="og:image" content="https://maps.zaritsuri.com/schedule/" />
+    <meta property="og:locale" content="ja_JP" />
     <title>科学部 予定管理</title>
-    <!-- ファビコン設定 -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧪</text></svg>">
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" size="180x180" href="apple-touch-icon.png">
     <!-- FullCalendar v6 -->
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     <style>
@@ -27,7 +31,7 @@
         }
 
         /* -------------------------------------------------- */
-        /* 🎯 過去予定のグレーアウトスタイル                 */
+        /* 🎯 過去予定のグレーアウトスタイル               */
         /* -------------------------------------------------- */
         .fc-event.is-past {
             background-color: #9e9e9e !important;
@@ -558,18 +562,14 @@
       async function loadReadmeVersion() {
         const versionContentEl = document.getElementById('versionContent');
         try {
-          // キャッシュ対策としてタイムスタンプを付与して取得
           const res = await fetch(`./README.md?v=${Date.now()}`);
           if (!res.ok) throw new Error("README.mdが見つかりませんでした");
           
           const markdownText = await res.text();
-          
-          // AUTO-UPDATE タグの間を正規表現で抽出
           const match = markdownText.match(/<!--\s*AUTO-UPDATE:START\s*-->([\s\S]*?)<!--\s*AUTO-UPDATE:END\s*-->/);
           
           if (match && match[1]) {
             const rawContent = match[1].trim();
-            // マークダウンのリスト形式 (- 項目) を簡単なHTMLリストに変換
             const lines = rawContent.split('\n').map(line => line.trim()).filter(line => line.startsWith('-'));
             
             if (lines.length > 0) {
@@ -593,7 +593,6 @@
       }
 
       document.addEventListener('DOMContentLoaded', function() {
-        // READMEのバージョン情報を非同期で読み込み
         loadReadmeVersion();
 
         // --- モーダル関連の処理 ---
@@ -610,14 +609,13 @@
         const pdfFrame = document.getElementById('pdfFrame');
         const pdfContainer = document.getElementById('pdfContainer');
 
-        // PDFの拡大・全画面関連の要素
         const zoomInBtn = document.getElementById('zoomInBtn');
         const zoomOutBtn = document.getElementById('zoomOutBtn');
         const zoomResetBtn = document.getElementById('zoomResetBtn');
         const fullscreenBtn = document.getElementById('fullscreenBtn');
 
         const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-        let currentScale = 1.33; // デフォルト100%基準
+        let currentScale = 1.33;
 
         function updateZoom(newScale) {
           if (isTouchDevice) return;
@@ -632,7 +630,6 @@
         zoomOutBtn.addEventListener('click', () => updateZoom(currentScale - 0.25));
         zoomResetBtn.addEventListener('click', () => updateZoom(1.0));
 
-        // 全画面表示の切り替え
         fullscreenBtn.addEventListener('click', () => {
           if (!document.fullscreenElement) {
             if (pdfContainer.requestFullscreen) {
@@ -649,7 +646,6 @@
           }
         });
 
-        // 全画面表示になったときに自動的に100%サイズに調整
         document.addEventListener('fullscreenchange', () => {
           if (document.fullscreenElement) {
             currentScale = 1.0;
