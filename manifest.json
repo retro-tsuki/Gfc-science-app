@@ -1,7 +1,8 @@
 {
   "name": "科学部 予定管理",
   "short_name": "科学部 予定管理",
-  "start_url": "/schedule/",
+  "start_url": "/schedule/index.html",
+  "scope": "/schedule/",
   "display": "standalone",
   "icons": [
     {
