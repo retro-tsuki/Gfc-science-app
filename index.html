@@ -3,16 +3,9 @@
 <head>
     <meta charset='utf-8' />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta property="og:site_name" content="サイトのブランド名・全体名" />
-    <meta property="og:title" content="ページのタイトル（記事名など）" />
-    <meta property="og:description" content="ページの概要・ディスクリプション（100〜120文字程度）" />
-    <meta property="og:type" content="article" /> <!-- トップページは 「website」、下層ページ・記事は 「article」 -->
-    <meta property="og:url" content="https://maps.zaritsuri.com/schedule/" /> <!-- ページの絶対URL -->
-    <meta property="og:image" content="https://maps.zaritsuri.com/schedule/" /> <!-- シェア時に表示させたい画像の絶対パス -->
-    <meta property="og:locale" content="ja_JP" /> <!-- 言語設定 -->
     <title>科学部 予定管理</title>
-    <link rel="icon" href="./favicon.ico" type="image/x-icon">
-    <link rel="apple-touch-icon" size="180x180" href="apple-touch-icon.png">
+    <!-- ファビコン設定 -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧪</text></svg>">
     <!-- FullCalendar v6 -->
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     <style>
@@ -34,7 +27,7 @@
         }
 
         /* -------------------------------------------------- */
-        /* 🎯 過去予定のグレーアウトスタイル               */
+        /* 🎯 過去予定のグレーアウトスタイル                 */
         /* -------------------------------------------------- */
         .fc-event.is-past {
             background-color: #9e9e9e !important;
@@ -328,6 +321,38 @@
 
         .modal-content ul { padding-left: 20px; line-height: 1.6; }
 
+        /* -------------------------------------------------- */
+        /* 📌 バージョンフッターセクションスタイル             */
+        /* -------------------------------------------------- */
+        .version-footer {
+            max-width: 900px;
+            margin: 30px auto 20px auto;
+            text-align: left;
+        }
+        .version-card {
+            background: #fff;
+            padding: 18px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .version-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 1rem;
+            color: #444;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .version-content {
+            font-size: 0.9rem;
+            color: #555;
+            line-height: 1.6;
+        }
+        .version-content ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
         .loading-overlay {
             display: none;
             position: fixed;
@@ -410,6 +435,16 @@
 
         <button class="submit-btn" id="addBtn">カレンダーに追加</button>
     </div>
+
+    <!-- 📌 最下部のバージョン・更新履歴セクション -->
+    <footer class="version-footer">
+        <div class="version-card">
+            <h3>📌 バージョン・更新履歴</h3>
+            <div class="version-content" id="versionContent">
+                読み込み中…
+            </div>
+        </div>
+    </footer>
 
     <!-- 使い方モーダル -->
     <div class="modal-overlay" id="helpModal">
@@ -519,7 +554,48 @@
         }));
       }
 
+      // 📌 README.md の AUTO-UPDATE タグ内を自動取得して表示する関数
+      async function loadReadmeVersion() {
+        const versionContentEl = document.getElementById('versionContent');
+        try {
+          // キャッシュ対策としてタイムスタンプを付与して取得
+          const res = await fetch(`./README.md?v=${Date.now()}`);
+          if (!res.ok) throw new Error("README.mdが見つかりませんでした");
+          
+          const markdownText = await res.text();
+          
+          // AUTO-UPDATE タグの間を正規表現で抽出
+          const match = markdownText.match(/<!--\s*AUTO-UPDATE:START\s*-->([\s\S]*?)<!--\s*AUTO-UPDATE:END\s*-->/);
+          
+          if (match && match[1]) {
+            const rawContent = match[1].trim();
+            // マークダウンのリスト形式 (- 項目) を簡単なHTMLリストに変換
+            const lines = rawContent.split('\n').map(line => line.trim()).filter(line => line.startsWith('-'));
+            
+            if (lines.length > 0) {
+              let htmlList = '<ul>';
+              lines.forEach(line => {
+                const itemText = line.replace(/^-/, '').trim();
+                htmlList += `<li>${itemText}</li>`;
+              });
+              htmlList += '</ul>';
+              versionContentEl.innerHTML = htmlList;
+            } else {
+              versionContentEl.textContent = rawContent;
+            }
+          } else {
+            versionContentEl.textContent = "更新履歴が見つかりませんでした。";
+          }
+        } catch (e) {
+          console.warn("バージョン情報の読み込みに失敗:", e);
+          versionContentEl.textContent = "バージョン情報の取得に失敗しました。";
+        }
+      }
+
       document.addEventListener('DOMContentLoaded', function() {
+        // READMEのバージョン情報を非同期で読み込み
+        loadReadmeVersion();
+
         // --- モーダル関連の処理 ---
         const openHelpBtn = document.getElementById('openHelpBtn');
         const closeHelpBtn = document.getElementById('closeHelpBtn');
