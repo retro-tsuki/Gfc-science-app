@@ -5,7 +5,7 @@
 <!-- AUTO-UPDATE:START -->
 - Update index.html (zarimap-owner)
 - docs: update README with recent commits [skip ci] (zarimap-owner)
-- Update README.md (zarimap-owner)
+- Update index.html (zarimap-owner)
 - docs: update README with recent commits [skip ci] (zarimap-owner)
-- Create readme.yml (zarimap-owner)
+- Update README.md (zarimap-owner)
 <!-- AUTO-UPDATE:END -->
