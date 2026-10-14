@@ -4,7 +4,9 @@
     <meta charset='utf-8' />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>科学部 予定管理</title>
+    <link rel="manifest" href="./manifest.json">
     <link rel="icon" href="./favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" size="180x180" href="apple-touch-icon.png">
     <!-- FullCalendar v6 -->
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     <style>
@@ -26,7 +28,7 @@
         }
 
         /* -------------------------------------------------- */
-        /* 🎯 過去予定のグレーアウトスタイル                 */
+        /* 🎯 過去予定のグレーアウトスタイル               */
         /* -------------------------------------------------- */
         .fc-event.is-past {
             background-color: #9e9e9e !important;
@@ -964,5 +966,20 @@
         });
       });
     </script>
+    <script>
+
+    </script>// ブラウザがService Workerに対応しているか確認
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+        .then(registration => {
+          console.log('Service Worker 登録成功:', registration.scope);
+        })
+        .catch(error => {
+          console.log('Service Worker 登録失敗:', error);
+        });
+      });
+    }
+  </script>
 </body>
 </html>
