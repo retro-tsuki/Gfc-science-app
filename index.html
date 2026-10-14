@@ -967,8 +967,6 @@
       });
     </script>
     <script>
-
-    </script>// ブラウザがService Workerに対応しているか確認
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
