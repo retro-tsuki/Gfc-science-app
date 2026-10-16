@@ -558,11 +558,12 @@
         }));
       }
 
-      // 📌 README.md の AUTO-UPDATE タグ内を文字列検索で安全に取得して表示する関数
+      // 📌 README.md の読み込み（構文エラー回避のためパス文字列を分割構築）
       async function loadReadmeVersion() {
         const versionContentEl = document.getElementById('versionContent');
         try {
-          const res = await fetch(`./README.md?v=${Date.now()}`);
+          const readmePath = ['.', 'README.md'].join('/');
+          const res = await fetch(`${readmePath}?v=${Date.now()}`);
           if (!res.ok) throw new Error("README.mdが見つかりませんでした");
           
           const markdownText = await res.text();
@@ -596,10 +597,13 @@
         }
       }
 
+      // 確実な時刻文字列生成（「9:00〜10:00」形式を強制）
       function formatTimeString(dateObj) {
         if (!dateObj) return '';
-        const hours = dateObj.getHours();
-        const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+        const d = new Date(dateObj);
+        if (isNaN(d.getTime())) return '';
+        const hours = d.getHours();
+        const minutes = d.getMinutes().toString().padStart(2, '0');
         return `${hours}:${minutes}`;
       }
 
@@ -672,7 +676,7 @@
         // 📋 週間行事予定表ボタンの処理
         openWeeklyBtn.addEventListener('click', async () => {
           updateZoom(1.0);
-          const pdfUrl = `./weeklySchedule/schedule.pdf`;
+          const pdfUrl = ['./weeklySchedule', 'schedule.pdf'].join('/');
           scheduleTitle.textContent = "📋 週間行事予定表（読み込み中…）";
           pdfFrame.src = pdfUrl;
           scheduleModal.style.display = 'flex';
@@ -697,7 +701,7 @@
         // 📄 月間行事予定表ボタンの処理
         openMonthlyBtn.addEventListener('click', async () => {
           updateZoom(1.0);
-          const pdfUrl = `./monthlySchedule/schedule.pdf`;
+          const pdfUrl = ['./monthlySchedule', 'schedule.pdf'].join('/');
           scheduleTitle.textContent = "📄 月間行事予定表（読み込み中…）";
           pdfFrame.src = pdfUrl;
           scheduleModal.style.display = 'flex';
@@ -721,7 +725,7 @@
         // 📅 年間行事予定表ボタンの処理
         openAnnualBtn.addEventListener('click', async () => {
           updateZoom(1.0);
-          const pdfUrl = `./annualSchedule/schedule.pdf`;
+          const pdfUrl = ['./annualSchedule', 'schedule.pdf'].join('/');
           scheduleTitle.textContent = "📅 年間行事予定表（読み込み中…）";
           pdfFrame.src = pdfUrl;
           scheduleModal.style.display = 'flex';
@@ -786,6 +790,7 @@
         var calendar = new FullCalendar.Calendar(calendarEl, {
           initialView: 'dayGridMonth',
           locale: 'ja',
+          displayEventTime: true,
           displayEventEnd: true,
           eventTimeFormat: {
             hour: 'numeric',
@@ -800,6 +805,7 @@
             right: 'today'
           },
 
+          // 🎯 修正：1時間枠や:00の時でも必ず開始・終了時刻（例: 9:00〜10:00）を強制表示する描画処理
           eventContent: function(arg) {
             let nodes = [];
 
@@ -815,10 +821,10 @@
             let timeText = '';
             if (!arg.event.allDay && arg.event.start) {
               const startStr = formatTimeString(arg.event.start);
-              if (arg.event.end) {
-                const endStr = formatTimeString(arg.event.end);
+              const endStr = formatTimeString(arg.event.end);
+              if (startStr && endStr) {
                 timeText = `${startStr}～${endStr} `;
-              } else {
+              } else if (startStr) {
                 timeText = `${startStr} `;
               }
             }
@@ -872,10 +878,10 @@
                   let timeText = '';
                   if (!arg.event.allDay && arg.event.start) {
                     const startStr = formatTimeString(arg.event.start);
-                    if (arg.event.end) {
-                      const endStr = formatTimeString(arg.event.end);
+                    const endStr = formatTimeString(arg.event.end);
+                    if (startStr && endStr) {
                       timeText = `${startStr}～${endStr} `;
-                    } else {
+                    } else if (startStr) {
                       timeText = `${startStr} `;
                     }
                   }
