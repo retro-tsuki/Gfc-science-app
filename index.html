@@ -558,7 +558,7 @@
         }));
       }
 
-      // 📌 README.md の AUTO-UPDATE タグ内を自動取得して表示する関数
+      // 📌 README.md の AUTO-UPDATE タグ内を文字列検索で安全に取得して表示する関数
       async function loadReadmeVersion() {
         const versionContentEl = document.getElementById('versionContent');
         try {
@@ -566,10 +566,14 @@
           if (!res.ok) throw new Error("README.mdが見つかりませんでした");
           
           const markdownText = await res.text();
-          const match = markdownText.match(/<!--\s*AUTO-UPDATE:START\s*-->([\s\S]*?)<!--\s*AUTO-UPDATE:END\s*-->/);
+          const startTag = '<!-- AUTO-UPDATE:START -->';
+          const endTag = '<!-- AUTO-UPDATE:END -->';
           
-          if (match && match[1]) {
-            const rawContent = match[1].trim();
+          const startIndex = markdownText.indexOf(startTag);
+          const endIndex = markdownText.indexOf(endTag);
+          
+          if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+            const rawContent = markdownText.substring(startIndex + startTag.length, endIndex).trim();
             const lines = rawContent.split('\n').map(line => line.trim()).filter(line => line.startsWith('-'));
             
             if (lines.length > 0) {
@@ -590,6 +594,13 @@
           console.warn("バージョン情報の読み込みに失敗:", e);
           versionContentEl.textContent = "バージョン情報の取得に失敗しました。";
         }
+      }
+
+      function formatTimeString(dateObj) {
+        if (!dateObj) return '';
+        const hours = dateObj.getHours();
+        const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
       }
 
       document.addEventListener('DOMContentLoaded', function() {
@@ -614,11 +625,9 @@
         const zoomResetBtn = document.getElementById('zoomResetBtn');
         const fullscreenBtn = document.getElementById('fullscreenBtn');
 
-        const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-        let currentScale = 1.33;
+        let currentScale = 1.0;
 
         function updateZoom(newScale) {
-          if (isTouchDevice) return;
           currentScale = Math.max(0.5, Math.min(3.0, newScale));
           pdfFrame.style.width = `${(100 / currentScale)}%`;
           pdfFrame.style.height = `${(100 / currentScale)}%`;
@@ -648,11 +657,9 @@
 
         document.addEventListener('fullscreenchange', () => {
           if (document.fullscreenElement) {
-            currentScale = 1.0;
-            if (!isTouchDevice) updateZoom(1.0);
+            updateZoom(1.0);
           } else {
-            currentScale = 1.33;
-            if (!isTouchDevice) updateZoom(1.33);
+            updateZoom(1.0);
           }
         });
 
@@ -664,15 +671,7 @@
 
         // 📋 週間行事予定表ボタンの処理
         openWeeklyBtn.addEventListener('click', async () => {
-          currentScale = 1.33;
-          if (!isTouchDevice) {
-            updateZoom(1.33);
-          } else {
-            pdfFrame.style.width = '100%';
-            pdfFrame.style.height = '100%';
-            pdfFrame.style.transform = 'none';
-          }
-
+          updateZoom(1.0);
           const pdfUrl = `./weeklySchedule/schedule.pdf`;
           scheduleTitle.textContent = "📋 週間行事予定表（読み込み中…）";
           pdfFrame.src = pdfUrl;
@@ -697,15 +696,7 @@
 
         // 📄 月間行事予定表ボタンの処理
         openMonthlyBtn.addEventListener('click', async () => {
-          currentScale = 1.33;
-          if (!isTouchDevice) {
-            updateZoom(1.33);
-          } else {
-            pdfFrame.style.width = '100%';
-            pdfFrame.style.height = '100%';
-            pdfFrame.style.transform = 'none';
-          }
-
+          updateZoom(1.0);
           const pdfUrl = `./monthlySchedule/schedule.pdf`;
           scheduleTitle.textContent = "📄 月間行事予定表（読み込み中…）";
           pdfFrame.src = pdfUrl;
@@ -729,15 +720,7 @@
 
         // 📅 年間行事予定表ボタンの処理
         openAnnualBtn.addEventListener('click', async () => {
-          currentScale = 1.33;
-          if (!isTouchDevice) {
-            updateZoom(1.33);
-          } else {
-            pdfFrame.style.width = '100%';
-            pdfFrame.style.height = '100%';
-            pdfFrame.style.transform = 'none';
-          }
-
+          updateZoom(1.0);
           const pdfUrl = `./annualSchedule/schedule.pdf`;
           scheduleTitle.textContent = "📅 年間行事予定表（読み込み中…）";
           pdfFrame.src = pdfUrl;
@@ -829,7 +812,17 @@
             let rawTitle = arg.event.title || '';
             let displayTitle = rawTitle.startsWith('*') ? rawTitle.slice(1) : rawTitle;
 
-            let timeText = arg.timeText ? arg.timeText + ' ' : '';
+            let timeText = '';
+            if (!arg.event.allDay && arg.event.start) {
+              const startStr = formatTimeString(arg.event.start);
+              if (arg.event.end) {
+                const endStr = formatTimeString(arg.event.end);
+                timeText = `${startStr}～${endStr} `;
+              } else {
+                timeText = `${startStr} `;
+              }
+            }
+
             let baseText = timeText + displayTitle;
 
             let wrapper = document.createElement('div');
@@ -875,7 +868,18 @@
               if (wrapper && firstBlock && content) {
                 if (firstBlock.offsetWidth > wrapper.clientWidth + 1) {
                   let displayTitle = rawTitle.startsWith('*') ? rawTitle.slice(1) : rawTitle;
-                  let timeText = arg.timeText ? arg.timeText + ' ' : '';
+                  
+                  let timeText = '';
+                  if (!arg.event.allDay && arg.event.start) {
+                    const startStr = formatTimeString(arg.event.start);
+                    if (arg.event.end) {
+                      const endStr = formatTimeString(arg.event.end);
+                      timeText = `${startStr}～${endStr} `;
+                    } else {
+                      timeText = `${startStr} `;
+                    }
+                  }
+
                   let baseText = timeText + displayTitle;
 
                   firstBlock.innerText = baseText + '　　';
