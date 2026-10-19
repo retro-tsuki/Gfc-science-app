@@ -661,6 +661,7 @@
       const loadingOverlay = document.getElementById('loadingOverlay');
       const loadingText = document.getElementById('loadingText');
       const CACHE_KEY = 'science_club_events_cache_v2'; 
+      const CHAT_CACHE_KEY = 'science_club_chat_cache_v1';
 
       localStorage.removeItem('science_club_events_cache');
 
@@ -673,7 +674,7 @@
         loadingOverlay.style.display = 'none';
       }
 
-      const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzVQBAkt6k3a0WJq7joAvtp0mFMuHZDjmgaRxmBS_gvRH5dTR-wc6TF_u-2-BBvt6Lpgw/exec';
+      const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxlFIYrp2JuigWirQ6aGd0SrDjrQOWcZ3KooV5esH-6DqQL-fAtk5tTwi387J6p_fQAQA/exec';
 
       async function fetchGasApi(options = {}, maxRetries = 2) {
         let attempt = 0;
@@ -792,7 +793,7 @@
       document.addEventListener('DOMContentLoaded', function() {
         loadReadmeVersion();
 
-        // --- チャット機能関連のロジック ---
+        // --- チャット機能関連のロジック（localStorage高速化対応） ---
         const openChatBtn = document.getElementById('openChatBtn');
         const closeChatBtn = document.getElementById('closeChatBtn');
         const chatModalOverlay = document.getElementById('chatModalOverlay');
@@ -809,11 +810,24 @@
         }
 
         async function loadChatMessages(scrollToBottom = false) {
+          // 1. まずlocalStorageのキャッシュがあれば即座に表示して高速化
+          const cachedChat = localStorage.getItem(CHAT_CACHE_KEY);
+          if (cachedChat) {
+            try {
+              const parsed = JSON.parse(cachedChat);
+              const validMessages = parsed.filter(msg => msg && msg.message && typeof msg.message === 'string' && msg.message.trim() !== '');
+              renderChatMessages(validMessages, scrollToBottom);
+            } catch (e) {
+              console.warn("チャットキャッシュパースエラー:", e);
+            }
+          }
+
+          // 2. 裏で最新データを取得し、キャッシュを更新して再描画
           try {
             const rawData = await fetchGasApi({ url: `${GAS_WEB_APP_URL}?action=getChat` });
             if (Array.isArray(rawData)) {
-              // 🎯 修正：メッセージ内容が空のレコードを完全に除外するフィルター
               const messages = rawData.filter(msg => msg && msg.message && typeof msg.message === 'string' && msg.message.trim() !== '');
+              localStorage.setItem(CHAT_CACHE_KEY, JSON.stringify(messages));
               renderChatMessages(messages, scrollToBottom);
             }
           } catch (err) {
