@@ -228,6 +228,149 @@
         .annual-btn { background-color: #17a2b8; }
         .annual-btn:active { background-color: #138496; }
 
+        /* -------------------------------------------------- */
+        /* 💬 部内チャット フローティングボタン ＆ ポップアップ  */
+        /* -------------------------------------------------- */
+        .chat-float-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 12px 20px;
+            font-size: 15px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,123,255,0.4);
+            cursor: pointer;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        .chat-float-btn:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        .chat-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            z-index: 9998;
+            justify-content: flex-end;
+            align-items: flex-end;
+        }
+        .chat-popup-container {
+            background: #fff;
+            width: 100%;
+            max-width: 420px;
+            height: 85vh;
+            max-height: 600px;
+            border-radius: 16px 16px 0 0;
+            box-shadow: 0 -5px 25px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: slideUp 0.3s ease-out;
+        }
+        @media (min-width: 600px) {
+            .chat-modal-overlay {
+                justify-content: flex-end;
+                align-items: flex-end;
+                padding: 20px;
+            }
+            .chat-popup-container {
+                border-radius: 16px;
+                height: 550px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .chat-header {
+            padding: 14px 18px;
+            background: #007bff;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-header h3 { margin: 0; font-size: 1.1rem; }
+        .chat-close-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .chat-messages-area {
+            flex-grow: 1;
+            padding: 14px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .chat-message-item {
+            background: #fff;
+            padding: 10px 14px;
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            max-width: 85%;
+            word-break: break-all;
+        }
+        .chat-message-item.my-message {
+            background: #dcf8c6;
+            align-self: flex-end;
+        }
+        .chat-msg-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #666;
+            margin-bottom: 4px;
+            gap: 10px;
+        }
+        .chat-msg-name { font-weight: bold; color: #333; }
+        .chat-msg-body { font-size: 0.95rem; color: #222; white-space: pre-wrap; line-height: 1.4; }
+
+        .chat-input-area {
+            padding: 12px;
+            background: #fff;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .chat-input-row {
+            display: flex;
+            gap: 8px;
+        }
+        .chat-name-input { width: 130px; height: 38px; font-size: 14px; padding: 0 8px; border: 1px solid #ccc; border-radius: 6px; }
+        .chat-text-input { flex-grow: 1; height: 38px; font-size: 14px; padding: 0 10px; border: 1px solid #ccc; border-radius: 6px; }
+        .chat-send-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0 16px;
+            height: 38px;
+            font-weight: bold;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .chat-send-btn:active { background-color: #0056b3; }
+
         .modal-overlay {
             display: none;
             position: fixed;
@@ -392,6 +535,33 @@
         <div class="loading-text" id="loadingText">処理中…</div>
     </div>
 
+    <!-- 💬 右下のチャット起動ボタン -->
+    <button class="chat-float-btn" id="openChatBtn">
+        💬 部内チャット
+    </button>
+
+    <!-- 💬 チャットモーダル・ポップアップ -->
+    <div class="chat-modal-overlay" id="chatModalOverlay">
+        <div class="chat-popup-container">
+            <div class="chat-header">
+                <h3>💬 科学部 部内チャット</h3>
+                <button class="chat-close-btn" id="closeChatBtn">&times;</button>
+            </div>
+            <div class="chat-messages-area" id="chatMessagesArea">
+                <div style="text-align: center; color: #888; margin-top: 20px;">メッセージを読み込み中…</div>
+            </div>
+            <div class="chat-input-area">
+                <div class="chat-input-row">
+                    <input type="text" id="chatNameInput" class="chat-name-input" placeholder="名前（例: 太郎）">
+                </div>
+                <div class="chat-input-row">
+                    <input type="text" id="chatTextInput" class="chat-text-input" placeholder="メッセージを入力...">
+                    <button class="chat-send-btn" id="chatSendBtn">送信</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="header-container">
         <h1>🧪 科学部 予定管理</h1>
         <div class="header-buttons">
@@ -490,7 +660,9 @@
     <script>
       const loadingOverlay = document.getElementById('loadingOverlay');
       const loadingText = document.getElementById('loadingText');
-      const CACHE_KEY = 'science_club_events_cache';
+      const CACHE_KEY = 'science_club_events_cache_v2'; 
+
+      localStorage.removeItem('science_club_events_cache');
 
       function showLoading(msg = '処理中…') {
         loadingText.textContent = msg;
@@ -547,11 +719,18 @@
         }
       }
 
-      // イベントデータの整形（allDayの判定を正確に行う）
       function formatEvents(data) {
         if (!Array.isArray(data)) return [];
         return data.map(event => {
-          const isAllDay = (event.all_day !== undefined) ? event.all_day : (event.allDay !== undefined ? event.allDay : true);
+          let isAllDay = true;
+          if (event.all_day !== undefined) {
+            isAllDay = event.all_day;
+          } else if (event.allDay !== undefined) {
+            isAllDay = event.allDay;
+          } else {
+            isAllDay = !event.start || !event.start.includes('T');
+          }
+
           return {
             id: event.id,
             title: event.title,
@@ -562,7 +741,7 @@
         });
       }
 
-      // 📌 README.md の読み込み（パス文字列を分割構築）
+      // 📌 README.md の読み込み
       async function loadReadmeVersion() {
         const versionContentEl = document.getElementById('versionContent');
         try {
@@ -601,7 +780,6 @@
         }
       }
 
-      // 確実な時刻文字列生成（H:mm）
       function formatTimeString(dateInput) {
         if (!dateInput) return '';
         const d = new Date(dateInput);
@@ -613,6 +791,141 @@
 
       document.addEventListener('DOMContentLoaded', function() {
         loadReadmeVersion();
+
+        // --- チャット機能関連のロジック ---
+        const openChatBtn = document.getElementById('openChatBtn');
+        const closeChatBtn = document.getElementById('closeChatBtn');
+        const chatModalOverlay = document.getElementById('chatModalOverlay');
+        const chatMessagesArea = document.getElementById('chatMessagesArea');
+        const chatNameInput = document.getElementById('chatNameInput');
+        const chatTextInput = document.getElementById('chatTextInput');
+        const chatSendBtn = document.getElementById('chatSendBtn');
+
+        let chatInterval = null;
+
+        // 保存された名前を復元
+        const savedName = localStorage.getItem('science_club_chat_name');
+        if (savedName) {
+          chatNameInput.value = savedName;
+        }
+
+        async function loadChatMessages(scrollToBottom = false) {
+          try {
+            const messages = await fetchGasApi({ url: `${GAS_WEB_APP_URL}?action=getChat` });
+            if (Array.isArray(messages)) {
+              renderChatMessages(messages, scrollToBottom);
+            }
+          } catch (err) {
+            console.warn("チャット読み込み失敗:", err);
+          }
+        }
+
+        function renderChatMessages(messages, scrollToBottom) {
+          const currentName = chatNameInput.value.trim();
+          chatMessagesArea.innerHTML = '';
+
+          if (messages.length === 0) {
+            chatMessagesArea.innerHTML = '<div style="text-align: center; color: #888; margin-top: 20px;">まだメッセージはありません。最初のメッセージを送ろう！</div>';
+            return;
+          }
+
+          messages.forEach(msg => {
+            const item = document.createElement('div');
+            item.className = 'chat-message-item';
+            if (currentName && msg.name === currentName) {
+              item.classList.add('my-message');
+            }
+
+            const header = document.createElement('div');
+            header.className = 'chat-msg-header';
+
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'chat-msg-name';
+            nameSpan.textContent = msg.name;
+
+            const timeSpan = document.createElement('span');
+            if (msg.created_at) {
+              const d = new Date(msg.created_at);
+              timeSpan.textContent = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+            }
+
+            header.appendChild(nameSpan);
+            header.appendChild(timeSpan);
+
+            const body = document.createElement('div');
+            body.className = 'chat-msg-body';
+            body.textContent = msg.message;
+
+            item.appendChild(header);
+            item.appendChild(body);
+            chatMessagesArea.appendChild(item);
+          });
+
+          if (scrollToBottom) {
+            chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
+          }
+        }
+
+        openChatBtn.addEventListener('click', () => {
+          chatModalOverlay.style.display = 'flex';
+          loadChatMessages(true);
+          // 開いている間、5秒ごとに新着メッセージを自動取得
+          if (!chatInterval) {
+            chatInterval = setInterval(() => loadChatMessages(false), 5000);
+          }
+        });
+
+        function closeChatModal() {
+          chatModalOverlay.style.display = 'none';
+          if (chatInterval) {
+            clearInterval(chatInterval);
+            chatInterval = null;
+          }
+        }
+
+        closeChatBtn.addEventListener('click', closeChatModal);
+        chatModalOverlay.addEventListener('click', (e) => {
+          if (e.target === chatModalOverlay) closeChatModal();
+        });
+
+        async function sendChatMessage() {
+          const name = chatNameInput.value.trim() || '名無し';
+          const message = chatTextInput.value.trim();
+
+          if (!message) return;
+
+          localStorage.setItem('science_club_chat_name', name);
+          chatTextInput.disabled = true;
+          chatSendBtn.disabled = true;
+
+          try {
+            await fetchGasApi({
+              method: 'POST',
+              body: {
+                action: 'insertChat',
+                name: name,
+                message: message
+              }
+            });
+
+            chatTextInput.value = '';
+            await loadChatMessages(true);
+          } catch (err) {
+            alert('メッセージの送信に失敗しました');
+          } finally {
+            chatTextInput.disabled = false;
+            chatSendBtn.disabled = false;
+            chatTextInput.focus();
+          }
+        }
+
+        chatSendBtn.addEventListener('click', sendChatMessage);
+        chatTextInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            sendChatMessage();
+          }
+        });
 
         // --- モーダル関連の処理 ---
         const openHelpBtn = document.getElementById('openHelpBtn');
@@ -803,7 +1116,6 @@
             right: 'today'
           },
 
-          // 🎯 修正：FullCalendarのデフォルトレンダラーに頼らず、開始・終了時間を完全に強制結合して描画
           eventContent: function(arg) {
             let nodes = [];
 
@@ -820,7 +1132,7 @@
             if (!arg.event.allDay && arg.event.start) {
               const startStr = formatTimeString(arg.event.start);
               const endStr = formatTimeString(arg.event.end);
-              if (startStr && endStr) {
+              if (startStr && endStr && startStr !== endStr) {
                 timeText = `${startStr}〜${endStr} `;
               } else if (startStr) {
                 timeText = `${startStr} `;
@@ -877,7 +1189,7 @@
                   if (!arg.event.allDay && arg.event.start) {
                     const startStr = formatTimeString(arg.event.start);
                     const endStr = formatTimeString(arg.event.end);
-                    if (startStr && endStr) {
+                    if (startStr && endStr && startStr !== endStr) {
                       timeText = `${startStr}〜${endStr} `;
                     } else if (startStr) {
                       timeText = `${startStr} `;
@@ -996,7 +1308,11 @@
             if (endTime) {
               endIso = `${endDate}T${endTime}:00+09:00`;
             } else {
-              endIso = `${endDate}T${startTime}:00+09:00`;
+              let [sh, sm] = startTime.split(':').map(Number);
+              let eh = (sh + 1) % 24;
+              let emStr = sm.toString().padStart(2, '0');
+              let ehStr = eh.toString().padStart(2, '0');
+              endIso = `${endDate}T${ehStr}:${emStr}:00+09:00`;
             }
           }
 
