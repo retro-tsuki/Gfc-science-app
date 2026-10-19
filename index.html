@@ -673,7 +673,7 @@
         loadingOverlay.style.display = 'none';
       }
 
-      const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxlFIYrp2JuigWirQ6aGd0SrDjrQOWcZ3KooV5esH-6DqQL-fAtk5tTwi387J6p_fQAQA/exec';
+      const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzVQBAkt6k3a0WJq7joAvtp0mFMuHZDjmgaRxmBS_gvRH5dTR-wc6TF_u-2-BBvt6Lpgw/exec';
 
       async function fetchGasApi(options = {}, maxRetries = 2) {
         let attempt = 0;
@@ -803,7 +803,6 @@
 
         let chatInterval = null;
 
-        // 保存された名前を復元
         const savedName = localStorage.getItem('science_club_chat_name');
         if (savedName) {
           chatNameInput.value = savedName;
@@ -811,8 +810,10 @@
 
         async function loadChatMessages(scrollToBottom = false) {
           try {
-            const messages = await fetchGasApi({ url: `${GAS_WEB_APP_URL}?action=getChat` });
-            if (Array.isArray(messages)) {
+            const rawData = await fetchGasApi({ url: `${GAS_WEB_APP_URL}?action=getChat` });
+            if (Array.isArray(rawData)) {
+              // 🎯 修正：メッセージ内容が空のレコードを完全に除外するフィルター
+              const messages = rawData.filter(msg => msg && msg.message && typeof msg.message === 'string' && msg.message.trim() !== '');
               renderChatMessages(messages, scrollToBottom);
             }
           } catch (err) {
@@ -841,7 +842,7 @@
 
             const nameSpan = document.createElement('span');
             nameSpan.className = 'chat-msg-name';
-            nameSpan.textContent = msg.name;
+            nameSpan.textContent = msg.name || '名無し';
 
             const timeSpan = document.createElement('span');
             if (msg.created_at) {
@@ -869,7 +870,6 @@
         openChatBtn.addEventListener('click', () => {
           chatModalOverlay.style.display = 'flex';
           loadChatMessages(true);
-          // 開いている間、5秒ごとに新着メッセージを自動取得
           if (!chatInterval) {
             chatInterval = setInterval(() => loadChatMessages(false), 5000);
           }
@@ -1132,7 +1132,7 @@
             if (!arg.event.allDay && arg.event.start) {
               const startStr = formatTimeString(arg.event.start);
               const endStr = formatTimeString(arg.event.end);
-              if (startStr && endStr && startStr !== endStr) {
+              if (startStr && endStr) {
                 timeText = `${startStr}〜${endStr} `;
               } else if (startStr) {
                 timeText = `${startStr} `;
@@ -1189,7 +1189,7 @@
                   if (!arg.event.allDay && arg.event.start) {
                     const startStr = formatTimeString(arg.event.start);
                     const endStr = formatTimeString(arg.event.end);
-                    if (startStr && endStr && startStr !== endStr) {
+                    if (startStr && endStr) {
                       timeText = `${startStr}〜${endStr} `;
                     } else if (startStr) {
                       timeText = `${startStr} `;
