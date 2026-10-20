@@ -14,20 +14,113 @@
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     <style>
         * { box-sizing: border-box; }
-        body { 
+        html, body { 
+            margin: 0; 
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            margin: 10px; 
             background-color: #f0f2f5; 
             color: #333; 
         }
+
+        /* -------------------------------------------------- */
+        /* 📱 全体レイアウト（左側タブバー ＋ 右側メイン領域） */
+        /* -------------------------------------------------- */
+        .app-layout {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 左側縦タブバー */
+        .sidebar {
+            width: 72px;
+            background-color: #ffffff;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 16px;
+            gap: 12px;
+            flex-shrink: 0;
+            z-index: 1000;
+        }
+        .nav-tab {
+            width: 56px;
+            height: 56px;
+            border: none;
+            background: transparent;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            gap: 2px;
+            color: #555;
+            transition: background 0.2s, color 0.2s;
+        }
+        .nav-tab:hover {
+            background-color: #f0f2f5;
+        }
+        .nav-tab.active {
+            background-color: #e7f1ff;
+            color: #007bff;
+        }
+        .nav-icon {
+            font-size: 20px;
+        }
+        .nav-label {
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        /* 右側メインコンテンツエリア */
+        .main-content {
+            flex-grow: 1;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tab-pane {
+            display: none;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+        }
+        .tab-pane.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ホームペインの中身のレイアウト用コンテナ */
+        .home-container {
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px 10px;
+        }
+
+        /* iframe全画面埋め込みスタイル */
+        .full-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #fff;
+        }
+
         #calendar { 
-            max-width: 900px; 
-            margin: 0 auto; 
             background: white; 
             padding: 10px; 
             border-radius: 12px; 
             box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
             min-height: 400px; 
+            margin-bottom: 20px;
         }
 
         /* -------------------------------------------------- */
@@ -115,12 +208,11 @@
         /* UI & フォームスタイル                              */
         /* -------------------------------------------------- */
         .form-container {
-            max-width: 900px;
-            margin: 20px auto;
             background: #fff;
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
         }
         .form-container h2 { margin-top: 0; font-size: 1.2rem; }
         .form-group { margin-bottom: 14px; }
@@ -195,13 +287,12 @@
         button.submit-btn:active { background-color: #0056b3; }
         
         .header-container {
-            max-width: 900px;
-            margin: 0 auto 10px auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 10px;
+            margin-bottom: 10px;
         }
         h1 { margin: 0; font-size: 1.5rem; }
         
@@ -472,8 +563,8 @@
         /* 📌 バージョンフッターセクションスタイル             */
         /* -------------------------------------------------- */
         .version-footer {
-            max-width: 900px;
-            margin: 30px auto 20px auto;
+            margin-top: 30px;
+            margin-bottom: 20px;
             text-align: left;
         }
         .version-card {
@@ -535,10 +626,96 @@
         <div class="loading-text" id="loadingText">処理中…</div>
     </div>
 
-    <!-- 💬 右下のチャット起動ボタン -->
-    <button class="chat-float-btn" id="openChatBtn">
-        💬 部内チャット
-    </button>
+    <!-- 全体レイアウトコンテナ -->
+    <div class="app-layout">
+        <!-- 🧭 左側縦タブバー -->
+        <nav class="sidebar">
+            <button class="nav-tab active" data-target="home-pane" title="ホーム">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">ホーム</span>
+            </button>
+            <button class="nav-tab" data-target="test-pane" title="テスト">
+                <span class="nav-icon">🌐</span>
+                <span class="nav-label">テスト</span>
+            </button>
+        </nav>
+
+        <!-- 🖥️ 右側メインコンテンツ領域 -->
+        <main class="main-content">
+            <!-- ホームタブ（スケジュール兼チャット） -->
+            <div class="tab-pane active" id="home-pane">
+                <div class="home-container">
+                    <div class="header-container">
+                        <h1>🧪 科学部 予定管理</h1>
+                        <div class="header-buttons">
+                            <button class="weekly-btn" id="openWeeklyBtn">📋 週間行事予定表</button>
+                            <button class="schedule-btn" id="openMonthlyBtn">📄 月間行事予定表</button>
+                            <button class="annual-btn" id="openAnnualBtn">📅 年間行事予定表</button>
+                            <button class="help-btn" id="openHelpBtn">❓ 使い方</button>
+                        </div>
+                    </div>
+
+                    <div id='calendar'></div>
+
+                    <div class="form-container">
+                        <h2>📅 予定を追加する</h2>
+                        
+                        <div class="form-group">
+                            <label for="eventTitle">予定の名前（※祝日は先頭に * を付ける）</label>
+                            <input type="text" id="eventTitle" placeholder="（例：夏合宿、*秋分の日）">
+                        </div>
+
+                        <div class="form-group">
+                            <label>期間指定</label>
+                            <div class="form-row">
+                                <div class="field-box"><input type="date" id="eventStartDate"></div>
+                                <div class="range-separator">〜</div>
+                                <div class="field-box"><input type="date" id="eventEndDate"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="allDayCheck" checked>
+                                <label for="allDayCheck" style="margin:0; cursor:pointer;">終日</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>時間指定</label>
+                            <div class="form-row">
+                                <div class="field-box"><input type="time" id="eventStartTime" disabled></div>
+                                <div class="range-separator">〜</div>
+                                <div class="field-box"><input type="time" id="eventEndTime" disabled></div>
+                            </div>
+                        </div>
+
+                        <button class="submit-btn" id="addBtn">カレンダーに追加</button>
+                    </div>
+
+                    <!-- 📌 最下部のバージョン・更新履歴セクション -->
+                    <footer class="version-footer">
+                        <div class="version-card">
+                            <h3>📌 バージョン・更新履歴</h3>
+                            <div class="version-content" id="versionContent">
+                                読み込み中…
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+
+                <!-- 💬 右下のチャット起動ボタン（ホーム内） -->
+                <button class="chat-float-btn" id="openChatBtn">
+                    💬 部内チャット
+                </button>
+            </div>
+
+            <!-- テストタブ（iframe埋め込み） -->
+            <div class="tab-pane" id="test-pane">
+                <iframe src="https://maps.zaritsuri.com/test/" class="full-iframe" allowfullscreen></iframe>
+            </div>
+        </main>
+    </div>
 
     <!-- 💬 チャットモーダル・ポップアップ -->
     <div class="chat-modal-overlay" id="chatModalOverlay">
@@ -561,64 +738,6 @@
             </div>
         </div>
     </div>
-
-    <div class="header-container">
-        <h1>🧪 科学部 予定管理</h1>
-        <div class="header-buttons">
-            <button class="weekly-btn" id="openWeeklyBtn">📋 週間行事予定表</button>
-            <button class="schedule-btn" id="openMonthlyBtn">📄 月間行事予定表</button>
-            <button class="annual-btn" id="openAnnualBtn">📅 年間行事予定表</button>
-            <button class="help-btn" id="openHelpBtn">❓ 使い方</button>
-        </div>
-    </div>
-
-    <div id='calendar'></div>
-
-    <div class="form-container">
-        <h2>📅 予定を追加する</h2>
-        
-        <div class="form-group">
-            <label for="eventTitle">予定の名前（※祝日は先頭に * を付ける）</label>
-            <input type="text" id="eventTitle" placeholder="（例：夏合宿、*秋分の日）">
-        </div>
-
-        <div class="form-group">
-            <label>期間指定</label>
-            <div class="form-row">
-                <div class="field-box"><input type="date" id="eventStartDate"></div>
-                <div class="range-separator">〜</div>
-                <div class="field-box"><input type="date" id="eventEndDate"></div>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <div class="checkbox-container">
-                <input type="checkbox" id="allDayCheck" checked>
-                <label for="allDayCheck" style="margin:0; cursor:pointer;">終日</label>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label>時間指定</label>
-            <div class="form-row">
-                <div class="field-box"><input type="time" id="eventStartTime" disabled></div>
-                <div class="range-separator">〜</div>
-                <div class="field-box"><input type="time" id="eventEndTime" disabled></div>
-            </div>
-        </div>
-
-        <button class="submit-btn" id="addBtn">カレンダーに追加</button>
-    </div>
-
-    <!-- 📌 最下部のバージョン・更新履歴セクション -->
-    <footer class="version-footer">
-        <div class="version-card">
-            <h3>📌 バージョン・更新履歴</h3>
-            <div class="version-content" id="versionContent">
-                読み込み中…
-            </div>
-        </div>
-    </footer>
 
     <!-- 使い方モーダル -->
     <div class="modal-overlay" id="helpModal">
@@ -674,6 +793,7 @@
         loadingOverlay.style.display = 'none';
       }
 
+      // 🎯 最新のGAS URLを設定
       const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzVQBAkt6k3a0WJq7joAvtp0mFMuHZDjmgaRxmBS_gvRH5dTR-wc6TF_u-2-BBvt6Lpgw/exec";
 
       async function fetchGasApi(options = {}, maxRetries = 2) {
@@ -682,7 +802,6 @@
         while (attempt < maxRetries) {
           try {
             attempt++;
-            // 🎯 修正：options.url（クエリパラメータ付きなど）が指定されている場合はそれを優先使用するよう修正
             const url = options.url || GAS_WEB_APP_URL;
             const method = options.method || 'GET';
             
@@ -794,7 +913,32 @@
       document.addEventListener('DOMContentLoaded', function() {
         loadReadmeVersion();
 
-        // --- チャット機能関連のロジック（localStorage高速化対応） ---
+        // --- 🧭 タブ切り替えロジック ---
+        const navTabs = document.querySelectorAll('.nav-tab');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+
+        navTabs.forEach(tab => {
+          tab.addEventListener('click', () => {
+            const targetId = tab.getAttribute('data-target');
+
+            navTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            tabPanes.forEach(pane => {
+              pane.classList.remove('active');
+              if (pane.id === targetId) {
+                pane.classList.add('active');
+              }
+            });
+
+            // カレンダーが表示状態になった時にサイズを再計算させる
+            if (targetId === 'home-pane' && window.calendar) {
+              setTimeout(() => window.calendar.updateSize(), 50);
+            }
+          });
+        });
+
+        // --- チャット機能関連のロジック ---
         const openChatBtn = document.getElementById('openChatBtn');
         const closeChatBtn = document.getElementById('closeChatBtn');
         const chatModalOverlay = document.getElementById('chatModalOverlay');
@@ -811,7 +955,6 @@
         }
 
         async function loadChatMessages(scrollToBottom = false) {
-          // 1. まずlocalStorageのキャッシュがあれば即座に表示して高速化
           const cachedChat = localStorage.getItem(CHAT_CACHE_KEY);
           if (cachedChat) {
             try {
@@ -823,7 +966,6 @@
             }
           }
 
-          // 2. 裏で最新データを取得し、キャッシュを更新して再描画
           try {
             const rawData = await fetchGasApi({ url: `${GAS_WEB_APP_URL}?action=getChat` });
             if (Array.isArray(rawData)) {
@@ -992,11 +1134,7 @@
         });
 
         document.addEventListener('fullscreenchange', () => {
-          if (document.fullscreenElement) {
-            updateZoom(1.0);
-          } else {
-            updateZoom(1.0);
-          }
+          updateZoom(1.0);
         });
 
         openHelpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
@@ -1292,6 +1430,7 @@
         });
 
         calendar.render();
+        window.calendar = calendar;
 
         addBtn.addEventListener('click', async function() {
           var title = eventTitleInput.value.trim();
