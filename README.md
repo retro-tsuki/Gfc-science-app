@@ -7,5 +7,5 @@
 - docs: update README with recent commits [skip ci] (zarimap-owner)
 - Update index.html (zarimap-owner)
 - docs: update README with recent commits [skip ci] (zarimap-owner)
-- vscode, beta: エンドポイント修正 (zarimap-owner)
+- Update index.html (zarimap-owner)
 <!-- AUTO-UPDATE:END -->
