@@ -25,7 +25,7 @@
         }
 
         /* -------------------------------------------------- */
-        /* 📱 全体レイアウト（左側タブバー ＋ 右側メイン領域） */
+        /* 📱 全体レイアウト（左側縦タブバー ＋ 右側メイン領域） */
         /* -------------------------------------------------- */
         .app-layout {
             display: flex;
@@ -638,6 +638,10 @@
                 <span class="nav-icon">🌐</span>
                 <span class="nav-label">地震</span>
             </button>
+            <button class="nav-tab" data-target="drive-pane" title="ドライブ">
+                <span class="nav-icon">📁</span>
+                <span class="nav-label">ドライブ</span>
+            </button>
         </nav>
 
         <!-- 🖥️ 右側メインコンテンツ領域 -->
@@ -713,6 +717,11 @@
             <!-- テストタブ（iframe埋め込み） -->
             <div class="tab-pane" id="test-pane">
                 <iframe src="https://maps.zaritsuri.com/test/" class="full-iframe" allowfullscreen></iframe>
+            </div>
+
+            <!-- ドライブタブ（iframe埋め込み） -->
+            <div class="tab-pane" id="drive-pane">
+                <iframe src="https://drive.google.com/drive/folders/1VbQ4RB25xphvoYCvXFnYIhzqMfXoApwp" class="full-iframe" allowfullscreen></iframe>
             </div>
         </main>
     </div>
@@ -793,7 +802,6 @@
         loadingOverlay.style.display = 'none';
       }
 
-      // 🎯 最新のGAS URLを設定
       const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzVQBAkt6k3a0WJq7joAvtp0mFMuHZDjmgaRxmBS_gvRH5dTR-wc6TF_u-2-BBvt6Lpgw/exec";
 
       async function fetchGasApi(options = {}, maxRetries = 2) {
