@@ -682,6 +682,7 @@
         while (attempt < maxRetries) {
           try {
             attempt++;
+            // 🎯 修正：options.url（クエリパラメータ付きなど）が指定されている場合はそれを優先使用するよう修正
             const url = options.url || GAS_WEB_APP_URL;
             const method = options.method || 'GET';
             
