@@ -352,7 +352,7 @@
             white-space: pre-wrap;
         }
         
-        /* 警報バッジ用スタイル */
+        /* 警報バッジ指定スタイル（指定通りに色分け） */
         .warning-badge {
             display: inline-block;
             padding: 6px 12px;
@@ -360,12 +360,12 @@
             font-size: 0.85rem;
             font-weight: bold;
             margin: 4px;
-            color: #fff;
         }
-        .warning-level-special { background-color: #6f42c1; } /* 特別警報 */
-        .warning-level-high { background-color: #dc3545; }    /* 警報 */
-        .warning-level-middle { background-color: #fd7e14; }  /* 注意報 */
-        .warning-level-none { background-color: #28a745; }    /* 発表なし */
+        .warning-level-advisory { background-color: #ffc107; color: #212529; } /* 注意報：黄色 */
+        .warning-level-warning  { background-color: #dc3545; color: #ffffff; } /* 警報：赤 */
+        .warning-level-danger   { background-color: #6f42c1; color: #ffffff; } /* 危険警報：紫 */
+        .warning-level-special  { background-color: #212529; color: #ffffff; } /* 特別警報：黒 */
+        .warning-level-none     { background-color: #28a745; color: #ffffff; } /* 発表なし：緑 */
 
         /* 情報カード用スタイル */
         .info-card {
@@ -812,7 +812,7 @@
                     </div>
 
                     <div class="weather-card">
-                        <h3>周辺地域の警報・注意報（新指標対応）</h3>
+                        <h3>周辺地域の警報・注意報</h3>
                         <div id="weatherWarningsContainer" style="margin-top: 15px;">
                             <div style="color: #666;">警報・注意報情報を読み込み中…</div>
                         </div>
@@ -1095,7 +1095,7 @@
 
         try {
           const timeSeries = jmaForecastCache[0].timeSeries;
-          const weatherTimeSeries = timeSeries[0]; // 天気・テロップ
+          const weatherTimeSeries = timeSeries[0]; 
           const timeDefines = weatherTimeSeries.timeDefines;
           const areas = weatherTimeSeries.areas;
 
@@ -1107,7 +1107,7 @@
             const dateStr = `${dateObj.getMonth() + 1}月${dateObj.getDate()}日`;
             const rawWeather = targetArea.weathers[i] || '情報なし';
             
-            // 全角スペースの正確な挿入整形
+            // 全角スペース挿入整形
             const formattedWeather = rawWeather.replace(/([雨晴曇雷])\s*([所由時])/g, '$1　$2').replace(/\s+/g, '　');
 
             html += `
@@ -1123,6 +1123,18 @@
           forecastContainer.innerHTML = '<div style="color: #666;">予報データの解析に失敗しました。</div>';
         }
       }
+
+      // 気象庁注警報コード辞書（完全対応）
+      const warningCodeMap = {
+        '00': '解除',
+        '02': '暴風雪特別警報', '03': '大雨特別警報', '04': '大雪特別警報', '05': '暴風特別警報',
+        '06': '波浪特別警報', '07': '高潮特別警報',
+        '10': '大雨警報（土砂災害）', '12': '大雨警報（浸水害）', '13': '洪水警報',
+        '14': '大雨警報', '15': '大雪警報', '16': '暴風警報', '17': '暴風雪警報', '18': '波浪警報', '19': '高潮警報',
+        '32': '暴風雪注意報', '33': '大雨注意報', '35': '強風注意報', '36': '大雪注意報',
+        '37': '波浪注意報', '38': '高潮注意報', '39': '雷注意報', '40': '濃霧注意報',
+        '41': '乾燥注意報', '42': 'なだれ注意報', '43': '低温注意報', '44': '霜注意報', '46': '着雪注意報'
+      };
 
       function renderWeatherWarnings() {
         const warningsContainer = document.getElementById('weatherWarningsContainer');
@@ -1143,67 +1155,42 @@
           return;
         }
 
-        // 警報・注意報コードから名称へのマッピング辞書
-        const warningCodeMap = {
-          '02': '暴風雪警報', '03': '大雨警報', '04': '洪水警報', '05': '暴風警報',
-          '06': '大雪警報', '07': '波浪警報', '08': '高潮警報',
-          '32': '暴風雪注意報', '33': '大雨注意報', '35': '強風注意報', '36': '大雪注意報',
-          '37': '波浪注意報', '38': '高潮注意報', '39': '雷注意報', '40': '濃霧注意報',
-          '41': '乾燥注意報', '42': 'なだれ注意報', '43': '低温注意報', '44': '霜注意報', '46': '着雪注意報'
-        };
-
         try {
-          let areas = [];
+          let areaTypeObj = null;
           if (jmaWarningsCache.areaTypes) {
-            jmaWarningsCache.areaTypes.forEach(at => {
-              if (at.areas) {
-                areas = areas.concat(at.areas);
-              }
-            });
+            areaTypeObj = jmaWarningsCache.areaTypes.find(at => at.code === 'class20s') || jmaWarningsCache.areaTypes[0];
           }
+          let areas = areaTypeObj ? areaTypeObj.areas : [];
 
           let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
 
           targetMunicipalities.forEach(mun => {
-            let matchedArea = areas.find(a => a.code === mun.code7 || a.code === mun.code5 || (a.code && a.code.includes(mun.code5)));
+            let matchedArea = areas.find(a => a.code === mun.code7 || a.code === mun.code5);
             let activeWarnings = [];
 
-            if (matchedArea) {
-              let rawList = matchedArea.warnings || matchedArea.codes || matchedArea.elements || [];
-              if (Array.isArray(rawList)) {
-                rawList.forEach(item => {
-                  let code = '';
-                  let title = '';
-                  let status = '';
+            if (matchedArea && Array.isArray(matchedArea.warnings)) {
+              matchedArea.warnings.forEach(w => {
+                const status = w.status || '';
+                const code = String(w.code || '');
 
-                  if (typeof item === 'string') {
-                    code = item;
-                  } else if (typeof item === 'object' && item !== null) {
-                    code = item.code || item.warningCode || '';
-                    title = item.title || '';
-                    status = item.status || '';
+                // 発表中・継続中・警報から注意報など有効なステータスのみ
+                if (status === '発表' || status === '継続' || status === '特別警報から警報' || status === '警報から注意報') {
+                  let name = warningCodeMap[code] || (code ? `警報・注意報(${code})` : '');
+                  if (!name || name === '解除') return;
+
+                  let levelClass = 'warning-level-advisory'; // デフォルト：注意報 (黄)
+
+                  if (name.includes('特別警報') || (parseInt(code, 10) >= 2 && parseInt(code, 10) <= 7)) {
+                    levelClass = 'warning-level-special'; // 特別警報 (黒)
+                  } else if (name.includes('土砂災害') || name.includes('危険')) {
+                    levelClass = 'warning-level-danger'; // 危険警報 (紫)
+                  } else if (name.includes('警報') || (parseInt(code, 10) >= 10 && parseInt(code, 10) <= 19)) {
+                    levelClass = 'warning-level-warning'; // 警報 (赤)
                   }
 
-                  if (status === '解除') return;
-
-                  let warnName = title || warningCodeMap[code] || (code ? `警報/注意報(${code})` : '');
-                  if (warnName) {
-                    let levelClass = 'warning-level-middle';
-                    let levelName = '注意報';
-                    
-                    if ((code && parseInt(code, 10) < 30) || warnName.includes('警報')) {
-                      if (warnName.includes('特別警報')) {
-                        levelClass = 'warning-level-special';
-                        levelName = '特別警報';
-                      } else {
-                        levelClass = 'warning-level-high';
-                        levelName = '警報';
-                      }
-                    }
-                    activeWarnings.push({ title: warnName, className: levelClass, level: levelName });
-                  }
-                });
-              }
+                  activeWarnings.push({ title: name, className: levelClass });
+                }
+              });
             }
 
             html += `
@@ -1230,7 +1217,7 @@
           warningsContainer.innerHTML = html;
 
         } catch (e) {
-          console.warn("警報レンダリングエラー:", e);
+          console.warn("警報解析エラー:", e);
           warningsContainer.innerHTML = '<div style="color: #666;">警報データの解析に失敗しました。</div>';
         }
       }
