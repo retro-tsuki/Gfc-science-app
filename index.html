@@ -352,20 +352,21 @@
             white-space: pre-wrap;
         }
         
-        /* 警報バッジ指定カラー（注意報：黄色、警報：赤、危険警報：紫、特別警報：黒、発表なし：緑） */
-        .warning-badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            margin: 4px;
+        /* ウェザーニュース iframe用ラッパー */
+        .weather-iframe-container {
+            margin-top: 15px;
+            width: 100%;
+            height: 500px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e9ecef;
+            background: #fff;
         }
-        .warning-level-advisory { background-color: #ffc107; color: #212529; } /* 注意報：黄色 */
-        .warning-level-warning  { background-color: #dc3545; color: #ffffff; } /* 警報：赤 */
-        .warning-level-danger   { background-color: #6f42c1; color: #ffffff; } /* 危険警報：紫 */
-        .warning-level-special  { background-color: #212529; color: #ffffff; } /* 特別警報：黒 */
-        .warning-level-none     { background-color: #28a745; color: #ffffff; } /* 発表なし：緑 */
+        .weather-iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
 
         /* 情報カード用スタイル */
         .info-card {
@@ -786,7 +787,7 @@
                 </button>
             </div>
 
-            <!-- 地震タブ（iframe埋め込み） -->
+            <!-- 地震タブ（iframe埋め込み：Wolfx WebSocket連携ページ） -->
             <div class="tab-pane" id="earthquake-pane">
                 <iframe src="https://maps.zaritsuri.com/test/" class="full-iframe" allowfullscreen></iframe>
             </div>
@@ -812,9 +813,9 @@
                     </div>
 
                     <div class="weather-card">
-                        <h3>周辺地域の警報・注意報</h3>
-                        <div id="weatherWarningsContainer" style="margin-top: 15px;">
-                            <div style="color: #666;">警報・注意報情報を読み込み中…</div>
+                        <h3>岩手県の警報・注意報（ウェザーニュース）</h3>
+                        <div class="weather-iframe-container">
+                            <iframe src="https://weathernews.jp/onebox/warn/iwate/" title="ウェザーニュース 岩手県の警報・注意報"></iframe>
                         </div>
                     </div>
                 </div>
@@ -894,7 +895,7 @@
     <script>
       const loadingOverlay = document.getElementById('loadingOverlay');
       const loadingText = document.getElementById('loadingText');
-      const CACHE_KEY = 'science_club_events_cache_v2'; 
+      const CACHE_KEY = 'science_club_events_cache_v3'; 
       const CHAT_CACHE_KEY = 'science_club_chat_cache_v1';
 
       localStorage.removeItem('science_club_events_cache');
@@ -1054,38 +1055,25 @@
         }
       }
 
-      // ☀️ 気象庁API連携処理
+      // ☀️ 天気予報API連携処理（気象庁予報）
       let jmaForecastCache = null;
-      let jmaWarningsCache = null;
 
       async function loadWeatherData() {
         const forecastContainer = document.getElementById('weatherForecastContainer');
-        const warningsContainer = document.getElementById('weatherWarningsContainer');
         const citySelect = document.getElementById('weatherCitySelect');
 
         try {
-          // 1. 天気予報データの取得 (盛岡地方: 030000)
           if (!jmaForecastCache) {
             const res = await fetch('https://www.jma.go.jp/bosai/forecast/data/forecast/030000.json');
             if (!res.ok) throw new Error("天気予報の取得に失敗しました");
             jmaForecastCache = await res.json();
           }
 
-          // 2. 警報・注意報データの取得 (岩手県: 030000)
-          if (!jmaWarningsCache) {
-            const resWarn = await fetch('https://www.jma.go.jp/bosai/warning/data/warning/030000.json');
-            if (resWarn.ok) {
-              jmaWarningsCache = await resWarn.json();
-            }
-          }
-
           renderWeatherForecast(citySelect.value);
-          renderWeatherWarnings();
 
         } catch (err) {
-          console.warn("気象データ取得失敗:", err);
+          console.warn("天気予報取得失敗:", err);
           forecastContainer.innerHTML = '<div style="color: #dc3545;">天気予報データの取得に失敗しました。</div>';
-          warningsContainer.innerHTML = '<div style="color: #dc3545;">警報・注意報データの取得に失敗しました。</div>';
         }
       }
 
@@ -1121,132 +1109,6 @@
         } catch (e) {
           console.warn("天気予報レンダリングエラー:", e);
           forecastContainer.innerHTML = '<div style="color: #666;">予報データの解析に失敗しました。</div>';
-        }
-      }
-
-      // ご提示いただいた正式なコード辞書体系を完全に反映
-      const warningCodeMap = {
-        '41': '大雨危険警報（浸水害）',
-        '42': '土砂災害危険警報',
-        '43': '洪水危険警報',
-        '44': '高潮危険警報',
-        '33': '大雨特別警報',
-        '35': '大雪特別警報',
-        '32': '暴風特別警報',
-        '31': '暴風雪特別警報',
-        '36': '波浪特別警報',
-        '37': '高潮特別警報',
-        '04': '大雨警報',
-        '06': '大雪警報',
-        '07': '暴風警報',
-        '08': '暴風雪警報',
-        '17': '波浪警報',
-        '19': '高潮警報',
-        '03': '大雨注意報',
-        '05': '大雪注意報',
-        '02': '強風注意報',
-        '01': '風雪注意報',
-        '16': '波浪注意報',
-        '18': '高潮注意報',
-        '10': '雷注意報',
-        '12': '乾燥注意報',
-        '13': '濃霧注意報',
-        '14': '霜注意報',
-        '15': '雪崩注意報',
-        '20': '低温注意報',
-        '21': '着雪注意報',
-        '22': '着氷注意報',
-        '23': '融雪注意報'
-      };
-
-      function renderWeatherWarnings() {
-        const warningsContainer = document.getElementById('weatherWarningsContainer');
-        
-        const targetMunicipalities = [
-          { name: '盛岡市', code7: '0320100', code5: '03201' },
-          { name: '滝沢市', code7: '0321600', code5: '03216' },
-          { name: '雫石町', code7: '0330100', code5: '03301' },
-          { name: '紫波町', code7: '0332100', code5: '03321' },
-          { name: '矢巾町', code7: '0332200', code5: '03322' },
-          { name: '岩手町', code7: '0330300', code5: '03303' },
-          { name: '葛巻町', code7: '0330200', code5: '03302' },
-          { name: '八幡平市', code7: '0321400', code5: '03214' }
-        ];
-
-        if (!jmaWarningsCache) {
-          warningsContainer.innerHTML = '<div style="color: #666;">現在、警報・注意報のデータがありません。</div>';
-          return;
-        }
-
-        try {
-          let allAreas = [];
-          if (Array.isArray(jmaWarningsCache.areaTypes)) {
-            jmaWarningsCache.areaTypes.forEach(at => {
-              if (Array.isArray(at.areas)) {
-                allAreas = allAreas.concat(at.areas);
-              }
-            });
-          }
-
-          let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
-
-          targetMunicipalities.forEach(mun => {
-            let matchedArea = allAreas.find(a => a.code === mun.code7 || a.code === mun.code5);
-            let activeWarnings = [];
-
-            if (matchedArea && Array.isArray(matchedArea.warnings)) {
-              matchedArea.warnings.forEach(w => {
-                const status = w.status || '';
-                const code = String(w.code || '');
-
-                // 「解除」以外のすべてのステータス（発表、継続など）を漏れなく取得
-                if (status && status !== '解除') {
-                  let name = warningCodeMap[code] || w.title || `注警報(${code})`;
-                  if (name === '解除') return;
-
-                  let levelClass = 'warning-level-advisory'; // 注意報：黄色
-
-                  if (name.includes('特別警報') || ['31','32','33','35','36','37'].includes(code)) {
-                    levelClass = 'warning-level-special'; // 特別警報：黒
-                  } else if (name.includes('危険警報') || ['41','42','43','44'].includes(code)) {
-                    levelClass = 'warning-level-danger'; // 危険警報：紫
-                  } else if (name.includes('警報') || ['04','06','07','08','17','19'].includes(code)) {
-                    levelClass = 'warning-level-warning'; // 警報：赤
-                  }
-
-                  // ステータス（発表・継続など）を明示して表示
-                  let displayTitle = status ? `${name}（${status}）` : name;
-                  activeWarnings.push({ title: displayTitle, className: levelClass });
-                }
-              });
-            }
-
-            html += `
-              <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <span style="font-weight: bold; font-size: 1rem; min-width: 90px;">${mun.name}</span>
-                <div>
-            `;
-
-            if (activeWarnings.length > 0) {
-              activeWarnings.forEach(aw => {
-                html += `<span class="warning-badge ${aw.className}">${aw.title}</span>`;
-              });
-            } else {
-              html += `<span class="warning-badge warning-level-none">発表なし</span>`;
-            }
-
-            html += `
-                </div>
-              </div>
-            `;
-          });
-
-          html += '</div>';
-          warningsContainer.innerHTML = html;
-
-        } catch (e) {
-          console.warn("警報解析エラー:", e);
-          warningsContainer.innerHTML = '<div style="color: #666;">警報データの解析に失敗しました。</div>';
         }
       }
 
