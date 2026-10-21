@@ -352,7 +352,7 @@
             white-space: pre-wrap;
         }
         
-        /* 警報バッジ指定スタイル */
+        /* 警報バッジ指定カラー（注意報：黄色、警報：赤、危険警報：紫、特別警報：黒、発表なし：緑） */
         .warning-badge {
             display: inline-block;
             padding: 6px 12px;
@@ -1124,17 +1124,39 @@
         }
       }
 
-      // 気象庁注警報コード辞書（公式仕様に基づき補正）
+      // ご提示いただいた正式なコード辞書体系を完全に反映
       const warningCodeMap = {
-        '00': '解除',
-        '02': '暴風雪特別警報', '03': '大雨特別警報', '04': '大雪特別警報', '05': '暴風特別警報',
-        '06': '波浪特別警報', '07': '高潮特別警報',
-        '10': '大雨警報（土砂災害）', '12': '大雨警報（浸水害）', '13': '洪水警報',
-        '14': '雷注意報', '15': '強風注意報', '16': '波浪注意報', '17': '融雪注意報', '18': '洪水注意報', '19': '高潮注意報',
-        '20': '濃霧注意報', '21': '乾燥注意報', '22': 'なだれ注意報', '23': '低温注意報', '24': '霜注意報', '25': '着氷注意報', '26': '着雪注意報',
-        '32': '暴風雪注意報', '33': '大雨注意報', '35': '強風注意報', '36': '大雪注意報',
-        '37': '波浪注意報', '38': '高潮注意報', '39': '雷注意報', '40': '濃霧注意報',
-        '41': '乾燥注意報', '42': 'なだれ注意報', '43': '低温注意報', '44': '霜注意報', '46': '着雪注意報'
+        '41': '大雨危険警報（浸水害）',
+        '42': '土砂災害危険警報',
+        '43': '洪水危険警報',
+        '44': '高潮危険警報',
+        '33': '大雨特別警報',
+        '35': '大雪特別警報',
+        '32': '暴風特別警報',
+        '31': '暴風雪特別警報',
+        '36': '波浪特別警報',
+        '37': '高潮特別警報',
+        '04': '大雨警報',
+        '06': '大雪警報',
+        '07': '暴風警報',
+        '08': '暴風雪警報',
+        '17': '波浪警報',
+        '19': '高潮警報',
+        '03': '大雨注意報',
+        '05': '大雪注意報',
+        '02': '強風注意報',
+        '01': '風雪注意報',
+        '16': '波浪注意報',
+        '18': '高潮注意報',
+        '10': '雷注意報',
+        '12': '乾燥注意報',
+        '13': '濃霧注意報',
+        '14': '霜注意報',
+        '15': '雪崩注意報',
+        '20': '低温注意報',
+        '21': '着雪注意報',
+        '22': '着氷注意報',
+        '23': '融雪注意報'
       };
 
       function renderWeatherWarnings() {
@@ -1157,7 +1179,6 @@
         }
 
         try {
-          // areaTypes内から全エリアの配列を集約
           let allAreas = [];
           if (Array.isArray(jmaWarningsCache.areaTypes)) {
             jmaWarningsCache.areaTypes.forEach(at => {
@@ -1170,7 +1191,6 @@
           let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
 
           targetMunicipalities.forEach(mun => {
-            // 市町村コード（7桁・5桁）に該当するエリアを検索
             let matchedArea = allAreas.find(a => a.code === mun.code7 || a.code === mun.code5);
             let activeWarnings = [];
 
@@ -1179,22 +1199,24 @@
                 const status = w.status || '';
                 const code = String(w.code || '');
 
-                // 発表・継続などの有効ステータス
-                if (status === '発表' || status === '継続' || status === '特別警報から警報' || status === '警報から注意報') {
-                  let name = warningCodeMap[code] || (code ? `注警報(${code})` : '');
-                  if (!name || name === '解除') return;
+                // 「解除」以外のすべてのステータス（発表、継続など）を漏れなく取得
+                if (status && status !== '解除') {
+                  let name = warningCodeMap[code] || w.title || `注警報(${code})`;
+                  if (name === '解除') return;
 
                   let levelClass = 'warning-level-advisory'; // 注意報：黄色
 
-                  if (name.includes('特別警報') || (parseInt(code, 10) >= 2 && parseInt(code, 10) <= 7)) {
+                  if (name.includes('特別警報') || ['31','32','33','35','36','37'].includes(code)) {
                     levelClass = 'warning-level-special'; // 特別警報：黒
-                  } else if (name.includes('土砂災害') || name.includes('危険')) {
+                  } else if (name.includes('危険警報') || ['41','42','43','44'].includes(code)) {
                     levelClass = 'warning-level-danger'; // 危険警報：紫
-                  } else if (name.includes('警報') || (parseInt(code, 10) >= 10 && parseInt(code, 10) <= 13)) {
+                  } else if (name.includes('警報') || ['04','06','07','08','17','19'].includes(code)) {
                     levelClass = 'warning-level-warning'; // 警報：赤
                   }
 
-                  activeWarnings.push({ title: name, className: levelClass });
+                  // ステータス（発表・継続など）を明示して表示
+                  let displayTitle = status ? `${name}（${status}）` : name;
+                  activeWarnings.push({ title: displayTitle, className: levelClass });
                 }
               });
             }
