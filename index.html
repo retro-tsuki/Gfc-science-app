@@ -43,10 +43,9 @@
             flex-direction: column;
             align-items: center;
             padding-top: 16px;
-            gap: 10px;
+            gap: 12px;
             flex-shrink: 0;
             z-index: 1000;
-            overflow-y: auto;
         }
         .nav-tab {
             width: 56px;
@@ -62,7 +61,6 @@
             gap: 2px;
             color: #555;
             transition: background 0.2s, color 0.2s;
-            flex-shrink: 0;
         }
         .nav-tab:hover {
             background-color: #f0f2f5;
@@ -100,12 +98,12 @@
             flex-direction: column;
         }
 
-        /* コンテナ共通スタイル */
-        .pane-container {
+        /* 各タブの中身のレイアウト用コンテナ */
+        .container-inner {
             max-width: 900px;
             width: 100%;
             margin: 0 auto;
-            padding: 20px 14px;
+            padding: 20px 10px;
         }
 
         /* iframe全画面埋め込みスタイル */
@@ -209,14 +207,14 @@
         /* -------------------------------------------------- */
         /* UI & フォームスタイル                              */
         /* -------------------------------------------------- */
-        .form-container, .section-card {
+        .form-container {
             background: #fff;
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             margin-bottom: 20px;
         }
-        .form-container h2, .section-card h2 { margin-top: 0; font-size: 1.2rem; color: #222; }
+        .form-container h2 { margin-top: 0; font-size: 1.2rem; }
         .form-group { margin-bottom: 14px; }
         .form-group label {
             display: block;
@@ -252,13 +250,6 @@
             background-color: #fff;
             appearance: none;
             -webkit-appearance: none;
-        }
-        select {
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            background-size: 16px;
-            padding-right: 32px;
         }
         input:disabled {
             background-color: #e9ecef;
@@ -328,109 +319,72 @@
         .annual-btn { background-color: #17a2b8; }
         .annual-btn:active { background-color: #138496; }
 
-        /* -------------------------------------------------- */
-        /* ☀️ 天気タブ専用スタイル                          */
-        /* -------------------------------------------------- */
+        /* 天気カード用スタイル */
+        .weather-card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
         .weather-forecast-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 14px;
-            margin-top: 14px;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
         }
-        .weather-card {
+        .forecast-item {
             background: #f8f9fa;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 14px;
-            text-align: center;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
         }
-        .weather-date {
+        .forecast-date {
             font-weight: bold;
-            font-size: 1rem;
             color: #007bff;
-            margin-bottom: 6px;
-        }
-        .weather-telop {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #333;
-            margin: 8px 0;
-        }
-        .weather-detail {
-            font-size: 0.85rem;
-            color: #666;
-            margin-top: 6px;
-            line-height: 1.4;
-        }
-        .temp-box {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            font-size: 0.95rem;
-            font-weight: bold;
-            margin-top: 8px;
-        }
-        .temp-max { color: #dc3545; }
-        .temp-min { color: #0d6efd; }
-
-        /* 警報・注意報表示用 */
-        .warning-city-block {
-            border-bottom: 1px solid #e9ecef;
-            padding: 12px 0;
-        }
-        .warning-city-block:last-child {
-            border-bottom: none;
-        }
-        .warning-city-title {
-            font-weight: bold;
-            font-size: 1rem;
-            color: #333;
             margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
         }
-        .warning-badge-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
+        .forecast-text {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #444;
+            margin-top: 8px;
+            white-space: pre-wrap;
         }
+        
+        /* 警報バッジ用スタイル */
         .warning-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 4px 10px;
+            display: inline-block;
+            padding: 6px 12px;
             border-radius: 20px;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             font-weight: bold;
+            margin: 4px;
             color: #fff;
         }
-        /* 新指標レベル別カラー定義 */
-        .lvl-1 { background-color: #ffca28; color: #000; } /* 注意報 (レベル1) */
-        .lvl-2, .lvl-3 { background-color: #ff9800; color: #fff; } /* 警報 (レベル2/3) */
-        .lvl-4 { background-color: #e53935; color: #fff; } /* 特別警報・土砂災害等 (レベル4) */
-        .lvl-5 { background-color: #8e24aa; color: #fff; } /* 特別警報級 (レベル5) */
-        .lvl-none { background-color: #e0e0e0; color: #666; }
+        .warning-level-special { background-color: #6f42c1; } /* 特別警報 */
+        .warning-level-high { background-color: #dc3545; }    /* 警報 */
+        .warning-level-middle { background-color: #fd7e14; }  /* 注意報 */
+        .warning-level-none { background-color: #28a745; }    /* 発表なし */
 
-        /* -------------------------------------------------- */
-        /* ℹ️ 情報タブ専用スタイル                            */
-        /* -------------------------------------------------- */
-        .info-section-card {
-            background: #ffffff;
-            border-radius: 12px;
+        /* 情報カード用スタイル */
+        .info-card {
+            background: #fff;
             padding: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.08);
-            margin-bottom: 18px;
-            line-height: 1.7;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            line-height: 1.6;
         }
-        .info-section-card h1, .info-section-card h2, .info-section-card h3 {
-            margin-top: 0;
-            color: #007bff;
-            border-bottom: 2px solid #e7f1ff;
-            padding-bottom: 6px;
+        .info-section {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
         }
-        .info-section-card ul {
-            padding-left: 20px;
-            margin: 10px 0;
+        .info-section:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 0;
         }
 
         /* -------------------------------------------------- */
@@ -595,7 +549,9 @@
             position: relative;
         }
 
-        /* 行事予定表モーダル専用スタイル */
+        /* -------------------------------------------------- */
+        /* 📄 行事予定表モーダル専用カスタムスタイル           */
+        /* -------------------------------------------------- */
         .modal-content.schedule-modal {
             max-width: 850px;
             height: 88vh;
@@ -671,7 +627,9 @@
 
         .modal-content ul { padding-left: 20px; line-height: 1.6; }
 
-        /* バージョンフッターセクションスタイル */
+        /* -------------------------------------------------- */
+        /* 📌 バージョンフッターセクションスタイル             */
+        /* -------------------------------------------------- */
         .version-footer {
             margin-top: 30px;
             margin-bottom: 20px;
@@ -748,10 +706,6 @@
                 <span class="nav-icon">🌋</span>
                 <span class="nav-label">地震</span>
             </button>
-            <button class="nav-tab" data-target="drive-pane" title="ドライブ">
-                <span class="nav-icon">📁</span>
-                <span class="nav-label">ドライブ</span>
-            </button>
             <button class="nav-tab" data-target="weather-pane" title="天気">
                 <span class="nav-icon">☀️</span>
                 <span class="nav-label">天気</span>
@@ -764,9 +718,9 @@
 
         <!-- 🖥️ 右側メインコンテンツ領域 -->
         <main class="main-content">
-            <!-- 🏠 ホームタブ（スケジュール兼チャット） -->
+            <!-- ホームタブ（スケジュール兼チャット） -->
             <div class="tab-pane active" id="home-pane">
-                <div class="pane-container">
+                <div class="container-inner">
                     <div class="header-container">
                         <h1>🧪 科学部 予定管理</h1>
                         <div class="header-buttons">
@@ -832,60 +786,46 @@
                 </button>
             </div>
 
-            <!-- 🌋 地震タブ（旧テスト iframe埋め込み） -->
+            <!-- 地震タブ（iframe埋め込み） -->
             <div class="tab-pane" id="earthquake-pane">
                 <iframe src="https://maps.zaritsuri.com/test/" class="full-iframe" allowfullscreen></iframe>
             </div>
 
-            <!-- 📁 ドライブタブ（iframe埋め込み） -->
-            <div class="tab-pane" id="drive-pane">
-                <iframe src="https://drive.google.com/drive/folders/1VbQ4RB25xphvoYCvXFnYIhzqMfXoApwp" class="full-iframe" allowfullscreen></iframe>
-            </div>
-
-            <!-- ☀️ 天気タブ -->
+            <!-- 天気タブ -->
             <div class="tab-pane" id="weather-pane">
-                <div class="pane-container">
-                    <div class="header-container">
-                        <h1>☀️ 地域の天気・防災情報</h1>
-                        <button class="help-btn" id="refreshWeatherBtn">🔄 最新情報に更新</button>
-                    </div>
-
-                    <!-- 3日間天気予報カード -->
-                    <div class="section-card">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
-                            <h2 style="margin:0;">📅 3日間天気予報</h2>
-                            <div style="width: 180px;">
-                                <select id="weatherAreaSelect">
-                                    <option value="0320100">盛岡市</option>
-                                    <option value="0332200">矢巾町</option>
-                                    <option value="0332100">紫波町</option>
-                                </select>
-                            </div>
+                <div class="container-inner">
+                    <h1 style="margin-bottom: 20px;">☀️ 気象情報・警報一覧</h1>
+                    
+                    <div class="weather-card">
+                        <h3>盛岡地方 3日間天気予報</h3>
+                        <div class="form-group" style="margin-top: 15px; max-width: 300px;">
+                            <label for="weatherCitySelect">対象地域を選択</label>
+                            <select id="weatherCitySelect">
+                                <option value="0320100">盛岡市</option>
+                                <option value="0332200">矢巾町</option>
+                                <option value="0332100">紫波町</option>
+                            </select>
                         </div>
-                        <div id="weatherForecastArea" class="weather-forecast-grid">
-                            <div style="text-align: center; color: #888; grid-column: 1/-1; padding: 20px;">天気情報を読み込み中…</div>
+                        <div id="weatherForecastContainer" class="weather-forecast-grid">
+                            <div style="color: #666;">天気予報を読み込み中…</div>
                         </div>
                     </div>
 
-                    <!-- 警報・注意報セクション -->
-                    <div class="section-card">
-                        <h2>⚠️ 周辺地域の警報・注意報 (レベル1〜5対応)</h2>
-                        <div id="warningArea">
-                            <div style="text-align: center; color: #888; padding: 20px;">警報・注意報情報を読み込み中…</div>
+                    <div class="weather-card">
+                        <h3>周辺地域の警報・注意報（新指標対応）</h3>
+                        <div id="weatherWarningsContainer" style="margin-top: 15px;">
+                            <div style="color: #666;">警報・注意報情報を読み込み中…</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- ℹ️ 情報タブ -->
+            <!-- 情報タブ -->
             <div class="tab-pane" id="info-pane">
-                <div class="pane-container">
-                    <div class="header-container">
-                        <h1>ℹ️ 部内お知らせ・情報</h1>
-                        <button class="help-btn" id="refreshInfoBtn">🔄 再読み込み</button>
-                    </div>
-                    <div id="infoContentContainer">
-                        <div style="text-align: center; color: #888; padding: 30px;">お知らせ（info.md）を読み込み中…</div>
+                <div class="container-inner">
+                    <h1 style="margin-bottom: 20px;">ℹ️ お知らせ・情報</h1>
+                    <div class="info-card" id="infoContentContainer">
+                        <div style="color: #666;">情報を読み込み中…</div>
                     </div>
                 </div>
             </div>
@@ -1036,7 +976,7 @@
         });
       }
 
-      // README.md の読み込み
+      // 📌 README.md の読み込み
       async function loadReadmeVersion() {
         const versionContentEl = document.getElementById('versionContent');
         try {
@@ -1075,6 +1015,194 @@
         }
       }
 
+      // ℹ️ info.md の読み込み＆ --- 区切りセクション分け描画
+      async function loadInfoContent() {
+        const infoContainer = document.getElementById('infoContentContainer');
+        try {
+          const res = await fetch(`./info.md?v=${Date.now()}`);
+          if (!res.ok) throw new Error("info.mdが見つかりませんでした");
+          const text = await res.text();
+          
+          const sections = text.split(/---+/);
+          let html = '';
+          
+          sections.forEach(sec => {
+            const trimmed = sec.trim();
+            if (!trimmed) return;
+            
+            html += '<div class="info-section">';
+            const lines = trimmed.split('\n');
+            lines.forEach(line => {
+              const l = line.trim();
+              if (l.startsWith('# ')) {
+                html += `<h3 style="margin-top:0; color:#007bff;">${l.replace('# ', '')}</h3>`;
+              } else if (l.startsWith('## ')) {
+                html += `<h4 style="margin-top:10px; color:#333;">${l.replace('## ', '')}</h4>`;
+              } else if (l.startsWith('- ')) {
+                html += `<ul style="margin: 5px 0; padding-left: 20px;"><li>${l.replace('- ', '')}</li></ul>`;
+              } else if (l !== '') {
+                html += `<p style="margin: 5px 0;">${l}</p>`;
+              }
+            });
+            html += '</div>';
+          });
+          
+          infoContainer.innerHTML = html || '<div style="color:#666;">お知らせはありません。</div>';
+        } catch (err) {
+          console.warn("info.md読み込みエラー:", err);
+          infoContainer.innerHTML = '<div style="color:#666;">お知らせ情報を読み込めませんでした。</div>';
+        }
+      }
+
+      // ☀️ 気象庁API連携処理
+      let jmaForecastCache = null;
+      let jmaWarningsCache = null;
+
+      async function loadWeatherData() {
+        const forecastContainer = document.getElementById('weatherForecastContainer');
+        const warningsContainer = document.getElementById('weatherWarningsContainer');
+        const citySelect = document.getElementById('weatherCitySelect');
+
+        try {
+          // 1. 天気予報データの取得 (盛岡地方: 030000)
+          if (!jmaForecastCache) {
+            const res = await fetch('https://www.jma.go.jp/bosai/forecast/data/forecast/030000.json');
+            if (!res.ok) throw new Error("天気予報の取得に失敗しました");
+            jmaForecastCache = await res.json();
+          }
+
+          // 2. 警報・注意報データの取得 (岩手県: 030000)
+          if (!jmaWarningsCache) {
+            const resWarn = await fetch('https://www.jma.go.jp/bosai/warning/data/warning/030000.json');
+            if (resWarn.ok) {
+              jmaWarningsCache = await resWarn.json();
+            }
+          }
+
+          renderWeatherForecast(citySelect.value);
+          renderWeatherWarnings();
+
+        } catch (err) {
+          console.warn("気象データ取得失敗:", err);
+          forecastContainer.innerHTML = '<div style="color: #dc3545;">天気予報データの取得に失敗しました。</div>';
+          warningsContainer.innerHTML = '<div style="color: #dc3545;">警報・注意報データの取得に失敗しました。</div>';
+        }
+      }
+
+      function renderWeatherForecast(selectedCityCode) {
+        const forecastContainer = document.getElementById('weatherForecastContainer');
+        if (!jmaForecastCache || !jmaForecastCache[0]) return;
+
+        try {
+          const timeSeries = jmaForecastCache[0].timeSeries;
+          const weatherTimeSeries = timeSeries[0]; // 天気・テロップ
+          const timeDefines = weatherTimeSeries.timeDefines;
+          const areas = weatherTimeSeries.areas;
+
+          // 選択された市町村コードに一致するエリアを探す
+          let targetArea = areas.find(a => a.area.code === selectedCityCode) || areas[0];
+
+          let html = '';
+          for (let i = 0; i < timeDefines.length; i++) {
+            const dateObj = new Date(timeDefines[i]);
+            const dateStr = `${dateObj.getMonth() + 1}月${dateObj.getDate()}日`;
+            const rawWeather = targetArea.weathers[i] || '情報なし';
+            
+            // 雨　所によりなどの全角スペース整形
+            const formattedWeather = rawWeather.replace(/([雨晴曇雷])\s*([所由時])),/g, '$1　$2').replace(/\s+/g, '　');
+
+            html += `
+              <div class="forecast-item">
+                <div class="forecast-date">${dateStr}</div>
+                <div style="font-size: 1.1rem; font-weight: bold; color: #333;">${formattedWeather}</div>
+              </div>
+            `;
+          }
+          forecastContainer.innerHTML = html;
+        } catch (e) {
+          console.warn("天気予報レンダリングエラー:", e);
+          forecastContainer.innerHTML = '<div style="color: #666;">予報データの解析に失敗しました。</div>';
+        }
+      }
+
+      function renderWeatherWarnings() {
+        const warningsContainer = document.getElementById('weatherWarningsContainer');
+        
+        // 対象の8市町定義
+        const targetMunicipalities = [
+          { name: '盛岡市', code7: '0320100', code5: '03201' },
+          { name: '滝沢市', code7: '0321600', code5: '03216' },
+          { name: '雫石町', code7: '0330100', code5: '03301' },
+          { name: '紫波町', code7: '0332100', code5: '03321' },
+          { name: '矢巾町', code7: '0332200', code5: '03322' },
+          { name: '岩手町', code7: '0330300', code5: '03303' },
+          { name: '葛巻町', code7: '0330200', code5: '03302' },
+          { name: '八幡平市', code7: '0321400', code5: '03214' }
+        ];
+
+        if (!jmaWarningsCache || !jmaWarningsCache.areaTypes) {
+          warningsContainer.innerHTML = '<div style="color: #666;">現在、警報・注意報のデータがありません。</div>';
+          return;
+        }
+
+        try {
+          // 市町村コードごとの警報エリアデータを抽出
+          let areaTypeObj = jmaWarningsCache.areaTypes.find(at => at.code === 'class20s' || at.code === 'offices') || jmaWarningsCache.areaTypes[0];
+          let areas = areaTypeObj ? areaTypeObj.areas : [];
+
+          let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+
+          targetMunicipalities.forEach(mun => {
+            let matchedArea = areas.find(a => a.code === mun.code7 || a.code === mun.code5 || a.code === mun.code);
+            let activeWarnings = [];
+
+            if (matchedArea && matchedArea.warnings) {
+              matchedArea.warnings.forEach(w => {
+                // status: 発表, 継続, 解除 など
+                if (w.status && w.status !== '解除') {
+                  let levelClass = 'warning-level-middle';
+                  let levelName = '注意報';
+                  if (w.code && w.code.startsWith('0')) {
+                    levelClass = 'warning-level-special';
+                    levelName = '特別警報';
+                  } else if (w.status === '発表' || w.status === '継続') {
+                    levelClass = 'warning-level-high';
+                    levelName = '警報';
+                  }
+                  activeWarnings.push({ title: w.title || '警報・注意報', className: levelClass, level: levelName });
+                }
+              });
+            }
+
+            html += `
+              <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <span style="font-weight: bold; font-size: 1rem; min-width: 90px;">${mun.name}</span>
+                <div>
+            `;
+
+            if (activeWarnings.length > 0) {
+              activeWarnings.forEach(aw => {
+                html += `<span class="warning-badge ${aw.className}">${aw.title}（${aw.level}）</span>`;
+              });
+            } else {
+              html += `<span class="warning-badge warning-level-none">発表なし</span>`;
+            }
+
+            html += `
+                </div>
+              </div>
+            `;
+          });
+
+          html += '</div>';
+          warningsContainer.innerHTML = html;
+
+        } catch (e) {
+          console.warn("警報レンダリングエラー:", e);
+          warningsContainer.innerHTML = '<div style="color: #666;">警報データの解析に失敗しました。</div>';
+        }
+      }
+
       function formatTimeString(dateInput) {
         if (!dateInput) return '';
         const d = new Date(dateInput);
@@ -1084,212 +1212,11 @@
         return `${hours}:${minutes}`;
       }
 
-      // --------------------------------------------------
-      // ☀️ 天気情報データ制御ロジック
-      // --------------------------------------------------
-      const TARGET_MUNICIPALITIES = [
-        { name: "盛岡市", code7: "0320100", code5: "03201" },
-        { name: "滝沢市", code7: "0321600", code5: "03216" },
-        { name: "雫石町", code7: "0330100", code5: "03301" },
-        { name: "紫波町", code7: "0332100", code5: "03321" },
-        { name: "矢巾町", code7: "0332200", code5: "03322" },
-        { name: "岩手町", code7: "0330300", code5: "03303" },
-        { name: "葛巻町", code7: "0330200", code5: "03302" },
-        { name: "八幡平市", code7: "0321400", code5: "03214" }
-      ];
-
-      async function fetchWeatherData() {
-        const forecastContainer = document.getElementById('weatherForecastArea');
-        const warningContainer = document.getElementById('warningArea');
-        const selectedCode = document.getElementById('weatherAreaSelect').value;
-
-        // 1. 天気予報の取得 (岩手県: 030000)
-        try {
-          const res = await fetch("https://www.jma.go.jp/bosai/forecast/data/forecast/030000.json");
-          if (!res.ok) throw new Error("天気予報データ取得エラー");
-          const data = await res.json();
-
-          const timeSeries = data[0].timeSeries[0];
-          const dates = timeSeries.timeDefines;
-          const areas = timeSeries.areas;
-          
-          // 内陸エリア（030010）を取得
-          const inlandArea = areas.find(a => a.area.code === "030010") || areas[0];
-
-          // 詳細天気テキスト（data[0].timeSeries[1] または 3日間）
-          const detailSeries = data[0].timeSeries[1] ? data[0].timeSeries[1].areas.find(a => a.area.code === "030010") : null;
-
-          // 気温データ (data[0].timeSeries[2])
-          const tempSeries = data[0].timeSeries[2] ? data[0].timeSeries[2].areas.find(a => a.area.code === "030010") : null;
-
-          let html = '';
-          for (let i = 0; i < Math.min(dates.length, 3); i++) {
-            const dateObj = new Date(dates[i]);
-            const dateStr = `${dateObj.getMonth() + 1}/${dateObj.getDate()} (${['日','月','火','水','木','金','土'][dateObj.getDay()]})`;
-            const weatherText = inlandArea ? inlandArea.weathers[i] : '不明';
-
-            let tempHtml = '';
-            if (tempSeries && tempSeries.temps) {
-              const minTemp = tempSeries.temps[i * 2] || '--';
-              const maxTemp = tempSeries.temps[i * 2 + 1] || '--';
-              tempHtml = `<div class="temp-box">
-                <span class="temp-min">最低 ${minTemp}℃</span>
-                <span class="temp-max">最高 ${maxTemp}℃</span>
-              </div>`;
-            }
-
-            html += `
-              <div class="weather-card">
-                <div class="weather-date">${dateStr}</div>
-                <div class="weather-telop">${weatherText}</div>
-                ${tempHtml}
-              </div>
-            `;
-          }
-          forecastContainer.innerHTML = html;
-
-        } catch (e) {
-          console.warn("天気データ取得エラー:", e);
-          forecastContainer.innerHTML = `<div style="color:red; text-align:center; grid-column:1/-1;">天気データの取得に失敗しました</div>`;
-        }
-
-        // 2. 警報・注意報の取得 (レベル1〜5)
-        try {
-          const resWarn = await fetch("https://www.jma.go.jp/bosai/warning/data/warning/030000.json");
-          if (!resWarn.ok) throw new Error("警報データ取得エラー");
-          const warnData = await resWarn.json();
-
-          const areaTypes = warnData.areaTypes || [];
-          // 市町村クラス (class20)
-          const class20 = areaTypes.find(a => a.areaType === "class20") || {};
-          const areaList = class20.areas || [];
-
-          let warnHtml = '';
-
-          TARGET_MUNICIPALITIES.forEach(muni => {
-            const areaInfo = areaList.find(a => a.code === muni.code7 || a.code === muni.code5);
-            
-            let badgesHtml = '';
-            if (areaInfo && areaInfo.warnings && areaInfo.warnings.length > 0) {
-              const activeWarnings = areaInfo.warnings.filter(w => w.status !== "解除" && w.status !== "発表警報・注意報はなし");
-              
-              if (activeWarnings.length > 0) {
-                activeWarnings.forEach(w => {
-                  let lvlClass = 'lvl-1';
-                  let lvlName = '注意報';
-                  
-                  // レベル判定
-                  if (w.name.includes('特別警報')) {
-                    lvlClass = 'lvl-5';
-                    lvlName = 'レベル5相当';
-                  } else if (w.name.includes('警報')) {
-                    lvlClass = 'lvl-3';
-                    lvlName = 'レベル3/4相当';
-                  }
-
-                  badgesHtml += `<span class="warning-badge ${lvlClass}">${w.name} (${lvlName})</span>`;
-                });
-              }
-            }
-
-            if (!badgesHtml) {
-              badgesHtml = `<span class="warning-badge lvl-none">現在、発表中の警報・注意報はありません</span>`;
-            }
-
-            warnHtml += `
-              <div class="warning-city-block">
-                <div class="warning-city-title">
-                  <span>📍 ${muni.name}</span>
-                </div>
-                <div class="warning-badge-group">
-                  ${badgesHtml}
-                </div>
-              </div>
-            `;
-          });
-
-          warningContainer.innerHTML = warnHtml;
-
-        } catch (e) {
-          console.warn("警報データ取得エラー:", e);
-          warningContainer.innerHTML = `<div style="color:red; text-align:center;">警報・注意報データの取得に失敗しました</div>`;
-        }
-      }
-
-      // --------------------------------------------------
-      // ℹ️ 情報タブ（info.md）動的解析ロジック
-      // --------------------------------------------------
-      async function loadInfoMarkdown() {
-        const container = document.getElementById('infoContentContainer');
-        try {
-          const res = await fetch(`./info.md?v=${Date.now()}`);
-          if (!res.ok) throw new Error("info.mdが見つかりませんでした");
-          const text = await res.text();
-
-          // ---（ハイフン3つ）でセクション分割
-          const sections = text.split(/^---$/m).map(s => s.trim()).filter(s => s.length > 0);
-
-          if (sections.length === 0) {
-            container.innerHTML = `<div class="info-section-card">お知らせはありません</div>`;
-            return;
-          }
-
-          let html = '';
-          sections.forEach(sec => {
-            let parsedSec = sec;
-            
-            // # 見出し変換
-            parsedSec = parsedSec.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-            parsedSec = parsedSec.replace(/^## (.*$)/gim, '2>$1</h2>');
-            parsedSec = parsedSec.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-            
-            // 太字 **text**
-            parsedSec = parsedSec.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-            // 箇条書き - item
-            const lines = parsedSec.split('\n');
-            let inList = false;
-            let formattedLines = [];
-
-            lines.forEach(line => {
-              if (line.trim().startsWith('- ')) {
-                if (!inList) {
-                  formattedLines.push('<ul>');
-                  inList = true;
-                }
-                formattedLines.push(`<li>${line.trim().substring(2)}</li>`);
-              } else {
-                if (inList) {
-                  formattedLines.push('</ul>');
-                  inList = false;
-                }
-                formattedLines.push(line);
-              }
-            });
-            if (inList) formattedLines.push('</ul>');
-
-            parsedSec = formattedLines.join('<br>').replace(/<\/ul><br>/g, '</ul>').replace(/<\/h1><br>/g, '</h1>').replace(/<\/h2><br>/g, '</h2>').replace(/<\/h3><br>/g, '</h3>');
-
-            html += `<div class="info-section-card">${parsedSec}</div>`;
-          });
-
-          container.innerHTML = html;
-
-        } catch (e) {
-          console.warn("info.md 読み込みエラー:", e);
-          container.innerHTML = `
-            <div class="info-section-card">
-              <h1># お知らせ</h1>
-              <p>現在お知らせはありません。（info.md の読み込みに失敗しました）</p>
-            </div>
-          `;
-        }
-      }
-
       document.addEventListener('DOMContentLoaded', function() {
         loadReadmeVersion();
+        loadInfoContent();
 
-        // 🧭 タブ切り替えロジック
+        // --- 🧭 タブ切り替えロジック ---
         const navTabs = document.querySelectorAll('.nav-tab');
         const tabPanes = document.querySelectorAll('.tab-pane');
 
@@ -1307,25 +1234,25 @@
               }
             });
 
+            // 天気タブが開かれた時にデータをロード
+            if (targetId === 'weather-pane') {
+              loadWeatherData();
+            }
+
             // カレンダーが表示状態になった時にサイズを再計算させる
             if (targetId === 'home-pane' && window.calendar) {
               setTimeout(() => window.calendar.updateSize(), 50);
             }
-            // 天気タブに切り替わった場合取得
-            if (targetId === 'weather-pane') {
-              fetchWeatherData();
-            }
-            // 情報タブに切り替わった場合取得
-            if (targetId === 'info-pane') {
-              loadInfoMarkdown();
-            }
           });
         });
 
-        // 天気・情報のリフレッシュボタン
-        document.getElementById('weatherAreaSelect').addEventListener('change', fetchWeatherData);
-        document.getElementById('refreshWeatherBtn').addEventListener('click', fetchWeatherData);
-        document.getElementById('refreshInfoBtn').addEventListener('click', loadInfoMarkdown);
+        // 天気都市プルダウン変更時
+        const weatherCitySelect = document.getElementById('weatherCitySelect');
+        if (weatherCitySelect) {
+          weatherCitySelect.addEventListener('change', (e) => {
+            renderWeatherForecast(e.target.value);
+          });
+        }
 
         // --- チャット機能関連のロジック ---
         const openChatBtn = document.getElementById('openChatBtn');
