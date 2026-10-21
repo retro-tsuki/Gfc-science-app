@@ -1099,7 +1099,6 @@
           const timeDefines = weatherTimeSeries.timeDefines;
           const areas = weatherTimeSeries.areas;
 
-          // 選択された市町村コードに一致するエリアを探す
           let targetArea = areas.find(a => a.area.code === selectedCityCode) || areas[0];
 
           let html = '';
@@ -1108,13 +1107,13 @@
             const dateStr = `${dateObj.getMonth() + 1}月${dateObj.getDate()}日`;
             const rawWeather = targetArea.weathers[i] || '情報なし';
             
-            // 雨　所によりなどの全角スペース整形
-            const formattedWeather = rawWeather.replace(/([雨晴曇雷])\s*([所由時])),/g, '$1　$2').replace(/\s+/g, '　');
+            // 全角スペースの正確な挿入整形
+            const formattedWeather = rawWeather.replace(/([雨晴曇雷])\s*([所由時])/g, '$1　$2').replace(/\s+/g, '　');
 
             html += `
               <div class="forecast-item">
                 <div class="forecast-date">${dateStr}</div>
-                <div style="font-size: 1.1rem; font-weight: bold; color: #333;">${formattedWeather}</div>
+                <div class="forecast-text">${formattedWeather}</div>
               </div>
             `;
           }
@@ -1128,7 +1127,6 @@
       function renderWeatherWarnings() {
         const warningsContainer = document.getElementById('weatherWarningsContainer');
         
-        // 対象の8市町定義
         const targetMunicipalities = [
           { name: '盛岡市', code7: '0320100', code5: '03201' },
           { name: '滝沢市', code7: '0321600', code5: '03216' },
@@ -1140,38 +1138,72 @@
           { name: '八幡平市', code7: '0321400', code5: '03214' }
         ];
 
-        if (!jmaWarningsCache || !jmaWarningsCache.areaTypes) {
+        if (!jmaWarningsCache) {
           warningsContainer.innerHTML = '<div style="color: #666;">現在、警報・注意報のデータがありません。</div>';
           return;
         }
 
+        // 警報・注意報コードから名称へのマッピング辞書
+        const warningCodeMap = {
+          '02': '暴風雪警報', '03': '大雨警報', '04': '洪水警報', '05': '暴風警報',
+          '06': '大雪警報', '07': '波浪警報', '08': '高潮警報',
+          '32': '暴風雪注意報', '33': '大雨注意報', '35': '強風注意報', '36': '大雪注意報',
+          '37': '波浪注意報', '38': '高潮注意報', '39': '雷注意報', '40': '濃霧注意報',
+          '41': '乾燥注意報', '42': 'なだれ注意報', '43': '低温注意報', '44': '霜注意報', '46': '着雪注意報'
+        };
+
         try {
-          // 市町村コードごとの警報エリアデータを抽出
-          let areaTypeObj = jmaWarningsCache.areaTypes.find(at => at.code === 'class20s' || at.code === 'offices') || jmaWarningsCache.areaTypes[0];
-          let areas = areaTypeObj ? areaTypeObj.areas : [];
+          let areas = [];
+          if (jmaWarningsCache.areaTypes) {
+            jmaWarningsCache.areaTypes.forEach(at => {
+              if (at.areas) {
+                areas = areas.concat(at.areas);
+              }
+            });
+          }
 
           let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
 
           targetMunicipalities.forEach(mun => {
-            let matchedArea = areas.find(a => a.code === mun.code7 || a.code === mun.code5 || a.code === mun.code);
+            let matchedArea = areas.find(a => a.code === mun.code7 || a.code === mun.code5 || (a.code && a.code.includes(mun.code5)));
             let activeWarnings = [];
 
-            if (matchedArea && matchedArea.warnings) {
-              matchedArea.warnings.forEach(w => {
-                // status: 発表, 継続, 解除 など
-                if (w.status && w.status !== '解除') {
-                  let levelClass = 'warning-level-middle';
-                  let levelName = '注意報';
-                  if (w.code && w.code.startsWith('0')) {
-                    levelClass = 'warning-level-special';
-                    levelName = '特別警報';
-                  } else if (w.status === '発表' || w.status === '継続') {
-                    levelClass = 'warning-level-high';
-                    levelName = '警報';
+            if (matchedArea) {
+              let rawList = matchedArea.warnings || matchedArea.codes || matchedArea.elements || [];
+              if (Array.isArray(rawList)) {
+                rawList.forEach(item => {
+                  let code = '';
+                  let title = '';
+                  let status = '';
+
+                  if (typeof item === 'string') {
+                    code = item;
+                  } else if (typeof item === 'object' && item !== null) {
+                    code = item.code || item.warningCode || '';
+                    title = item.title || '';
+                    status = item.status || '';
                   }
-                  activeWarnings.push({ title: w.title || '警報・注意報', className: levelClass, level: levelName });
-                }
-              });
+
+                  if (status === '解除') return;
+
+                  let warnName = title || warningCodeMap[code] || (code ? `警報/注意報(${code})` : '');
+                  if (warnName) {
+                    let levelClass = 'warning-level-middle';
+                    let levelName = '注意報';
+                    
+                    if ((code && parseInt(code, 10) < 30) || warnName.includes('警報')) {
+                      if (warnName.includes('特別警報')) {
+                        levelClass = 'warning-level-special';
+                        levelName = '特別警報';
+                      } else {
+                        levelClass = 'warning-level-high';
+                        levelName = '警報';
+                      }
+                    }
+                    activeWarnings.push({ title: warnName, className: levelClass, level: levelName });
+                  }
+                });
+              }
             }
 
             html += `
@@ -1182,7 +1214,7 @@
 
             if (activeWarnings.length > 0) {
               activeWarnings.forEach(aw => {
-                html += `<span class="warning-badge ${aw.className}">${aw.title}（${aw.level}）</span>`;
+                html += `<span class="warning-badge ${aw.className}">${aw.title}</span>`;
               });
             } else {
               html += `<span class="warning-badge warning-level-none">発表なし</span>`;
@@ -1234,19 +1266,16 @@
               }
             });
 
-            // 天気タブが開かれた時にデータをロード
             if (targetId === 'weather-pane') {
               loadWeatherData();
             }
 
-            // カレンダーが表示状態になった時にサイズを再計算させる
             if (targetId === 'home-pane' && window.calendar) {
               setTimeout(() => window.calendar.updateSize(), 50);
             }
           });
         });
 
-        // 天気都市プルダウン変更時
         const weatherCitySelect = document.getElementById('weatherCitySelect');
         if (weatherCitySelect) {
           weatherCitySelect.addEventListener('change', (e) => {
