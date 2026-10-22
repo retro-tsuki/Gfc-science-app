@@ -304,6 +304,60 @@ h1 { margin: 0; font-size: 1.5rem; }
 .annual-btn { background-color: #17a2b8; }
 .annual-btn:active { background-color: #138496; }
 
+/* -------------------------------------------------- */
+/* 🚨 重要なお知らせバナー用スタイル（弾幕スクロール対応） */
+/* -------------------------------------------------- */
+.importance-card {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    max-width: 300px;
+    overflow: hidden;
+    white-space: nowrap;
+    animation: fadeIn 0.3s ease-out;
+}
+.importance-card.importance-yellow {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+.importance-card.importance-red {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+.importance-scroll-wrapper {
+    overflow: hidden;
+    white-space: nowrap;
+    flex-grow: 1;
+    min-width: 0;
+}
+.importance-scroll-content {
+    display: inline-flex;
+    white-space: nowrap;
+    will-change: transform;
+}
+.importance-text-block {
+    display: inline-block;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.importance-card.has-overflow .importance-scroll-content {
+    animation: seamless-danmaku-pause 10s linear infinite;
+}
+.importance-card:hover .importance-scroll-content {
+    animation-play-state: paused;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 /* 天気カード用スタイル */
 .weather-card {
     background: #fff;

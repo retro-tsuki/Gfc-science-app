@@ -160,6 +160,85 @@ async function loadInfoContent() {
   }
 }
 
+// 🚨 importance.txt の読み込み＆重要なお知らせ表示処理（弾幕対応版）
+async function loadImportance() {
+  const importanceCard = document.getElementById('importanceCard');
+  if (!importanceCard) return;
+
+  try {
+    const res = await fetch(`./importance.txt?v=${Date.now()}`);
+    if (!res.ok) {
+      importanceCard.style.display = 'none';
+      return;
+    }
+
+    const text = await res.text();
+    const trimmedText = text.trim();
+
+    if (!trimmedText) {
+      importanceCard.style.display = 'none';
+      return;
+    }
+
+    let message = trimmedText;
+    let isRed = false;
+
+    if (message.startsWith('!')) {
+      isRed = true;
+      message = message.substring(1).trim();
+    }
+
+    if (!message) {
+      importanceCard.style.display = 'none';
+      return;
+    }
+
+    const safeMessage = escapeHtml(message);
+
+    importanceCard.className = 'importance-card ' + (isRed ? 'importance-red' : 'importance-yellow');
+    importanceCard.innerHTML = `
+      <span>⚠️</span>
+      <div class="importance-scroll-wrapper">
+        <div class="importance-scroll-content">
+          <span class="importance-text-block">${safeMessage}</span>
+        </div>
+      </div>
+    `;
+    importanceCard.style.display = 'flex';
+
+    requestAnimationFrame(() => {
+      const wrapper = importanceCard.querySelector('.importance-scroll-wrapper');
+      const content = importanceCard.querySelector('.importance-scroll-content');
+      const firstBlock = importanceCard.querySelector('.importance-text-block');
+
+      if (wrapper && content && firstBlock) {
+        if (firstBlock.offsetWidth > wrapper.clientWidth + 1) {
+          firstBlock.innerHTML = safeMessage + '　　';
+
+          let span2 = document.createElement('span');
+          span2.className = 'importance-text-block';
+          span2.innerHTML = safeMessage + '　　';
+          content.appendChild(span2);
+
+          importanceCard.classList.add('has-overflow');
+        } else {
+          importanceCard.classList.remove('has-overflow');
+        }
+      }
+    });
+
+  } catch (err) {
+    console.warn("importance.txt読み込みエラー:", err);
+    importanceCard.style.display = 'none';
+  }
+}
+
+function escapeHtml(str) {
+  return str.replace(/[&<>'"]/g, 
+    tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+  );
+}
+
 // ☀️ 天気予報API連携処理（気象庁予報）
 let jmaForecastCache = null;
 
@@ -200,7 +279,6 @@ function renderWeatherForecast(selectedCityCode) {
       const dateStr = `${dateObj.getMonth() + 1}月${dateObj.getDate()}日`;
       const rawWeather = targetArea.weathers[i] || '情報なし';
       
-      // 全角スペース挿入整形
       const formattedWeather = rawWeather.replace(/([雨晴曇雷])\s*([所由時])/g, '$1　$2').replace(/\s+/g, '　');
 
       html += `
@@ -229,6 +307,7 @@ function formatTimeString(dateInput) {
 document.addEventListener('DOMContentLoaded', function() {
   loadReadmeVersion();
   loadInfoContent();
+  loadImportance();
 
   // --- 🧭 タブ切り替えロジック ---
   const navTabs = document.querySelectorAll('.nav-tab');
