@@ -160,7 +160,7 @@ async function loadInfoContent() {
   }
 }
 
-// 🚨 importance.txt の読み込み＆重要なお知らせ表示処理（弾幕対応版）
+// 🚨 importance.txt の読み込み＆重要なお知らせ表示処理（独立・低速弾幕対応版）
 async function loadImportance() {
   const importanceCard = document.getElementById('importanceCard');
   if (!importanceCard) return;
