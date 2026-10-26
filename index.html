@@ -3,115 +3,225 @@
 <head>
     <meta charset='utf-8' />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://maps.zaritsuri.com/schedule/" />
+    <meta property="og:image" content="https://maps.zaritsuri.com/schedule/" />
+    <meta property="og:locale" content="ja_JP" />
     <title>科学部 予定管理</title>
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" size="180x180" href="apple-touch-icon.png">
+    <!-- FullCalendar v6 -->
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
-    <style>
-        body { font-family: sans-serif; margin: 10px; background-color: #f0f2f5; color: #333; }
-        #calendar { max-width: 900px; margin: 0 auto; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        
-        /* 入力フォームのスタイル */
-        .form-container {
-            max-width: 900px;
-            margin: 20px auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .form-container h2 { margin-top: 0; font-size: 1.2rem; }
-        input[type="text"], input[type="date"] {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-sizing: border-box; /* iPhoneでの幅ズレ防止 */
-            font-size: 16px; /* iPhoneでズームされないためのサイズ */
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        button:active { background-color: #0056b3; }
-        
-        h1 { text-align: center; font-size: 1.5rem; }
-    </style>
+    <!-- 外部CSS読み込み -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h1>🧪 科学部 予定管理</h1>
-
-    <div id='calendar'></div>
-
-    <!-- iPhoneでも使いやすい入力フォーム -->
-    <div class="form-container">
-        <h2>📅 予定を追加する</h2>
-        <input type="text" id="eventTitle" placeholder="予定の名前（例：実験A）">
-        <input type="date" id="eventDate">
-        <button id="addBtn">カレンダーに追加</button>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loadingText">処理中…</div>
     </div>
 
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        var calendarEl = document.getElementById('calendar');
-        var eventTitleInput = document.getElementById('eventTitle');
-        var eventDateInput = document.getElementById('eventDate');
-        var addBtn = document.getElementById('addBtn');
+    <!-- 全体レイアウトコンテナ -->
+    <div class="app-layout">
+        <!-- 🧭 左側縦タブバー -->
+        <nav class="sidebar">
+            <button class="nav-tab active" data-target="home-pane" title="ホーム">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">ホーム</span>
+            </button>
+            <button class="nav-tab" data-target="earthquake-pane" title="地震">
+                <span class="nav-icon">🌋</span>
+                <span class="nav-label">地震</span>
+            </button>
+            <button class="nav-tab" data-target="weather-pane" title="天気">
+                <span class="nav-icon">☀️</span>
+                <span class="nav-label">天気</span>
+            </button>
+            <button class="nav-tab" data-target="info-pane" title="情報">
+                <span class="nav-icon">ℹ️</span>
+                <span class="nav-label">情報</span>
+            </button>
+        </nav>
 
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-          initialView: 'dayGridMonth',
-          locale: 'ja',
-          headerToolbar: {
-            left: 'prev,next',
-            center: 'title',
-            right: 'today'
-          },
-          events: JSON.parse(localStorage.getItem('clubEvents')) || [],
-          eventClick: function(info) {
-            if (confirm('「' + info.event.title + '」を削除しますか？')) {
-              info.event.remove();
-              saveEvents();
-            }
-          }
-        });
+        <!-- 🖥️ 右側メインコンテンツ領域 -->
+        <main class="main-content">
+            <!-- ホームタブ（スケジュール兼チャット） -->
+            <div class="tab-pane active" id="home-pane">
+                <div class="container-inner">
+                    <div class="header-container">
+                        <h1>🧪 科学部 予定管理</h1>
+                        <div class="header-buttons">
+                            <button class="weekly-btn" id="openWeeklyBtn">📋 週間行事予定表</button>
+                            <button class="schedule-btn" id="openMonthlyBtn">📄 月間行事予定表</button>
+                            <button class="annual-btn" id="openAnnualBtn">📅 年間行事予定表</button>
+                            <!-- 重要なお知らせエリア -->
+                            <div id="importanceCard" class="importance-card" style="display: none;"></div>
+                            <button class="help-btn" id="openHelpBtn">❓ 使い方</button>
+                        </div>
+                    </div>
 
-        calendar.render();
+                    <div id='calendar'></div>
 
-        // ボタンを押した時の処理
-        addBtn.addEventListener('click', function() {
-          var title = eventTitleInput.value;
-          var date = eventDateInput.value;
+                    <div class="form-container">
+                        <h2>📅 予定を追加する</h2>
+                        
+                        <div class="form-group">
+                            <label for="eventTitle">予定の名前（※祝日は先頭に * を付ける）</label>
+                            <input type="text" id="eventTitle" placeholder="（例：夏合宿、*秋分の日）">
+                        </div>
 
-          if (title && date) {
-            calendar.addEvent({
-              title: title,
-              start: date,
-              allDay: true
-            });
-            saveEvents();
-            
-            // 入力欄を空にする
-            eventTitleInput.value = '';
-            eventDateInput.value = '';
-            alert('追加しました！');
-          } else {
-            alert('タイトルと日付を入力してください');
-          }
-        });
+                        <div class="form-group">
+                            <label>期間指定</label>
+                            <div class="form-row">
+                                <div class="field-box"><input type="date" id="eventStartDate"></div>
+                                <div class="range-separator">〜</div>
+                                <div class="field-box"><input type="date" id="eventEndDate"></div>
+                            </div>
+                        </div>
 
-        function saveEvents() {
-          var events = calendar.getEvents().map(function(e) {
-            return { title: e.title, start: e.startStr, allDay: e.allDay };
-          });
-          localStorage.setItem('clubEvents', JSON.stringify(events));
-        }
-      });
-    </script>
+                        <div class="form-group">
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="allDayCheck" checked>
+                                <label for="allDayCheck" style="margin:0; cursor:pointer;">終日</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>時間指定</label>
+                            <div class="form-row">
+                                <div class="field-box"><input type="time" id="eventStartTime" disabled></div>
+                                <div class="range-separator">〜</div>
+                                <div class="field-box"><input type="time" id="eventEndTime" disabled></div>
+                            </div>
+                        </div>
+
+                        <button class="submit-btn" id="addBtn">カレンダーに追加</button>
+                    </div>
+
+                    <!-- 📌 最下部のバージョン・更新履歴セクション -->
+                    <footer class="version-footer">
+                        <div class="version-card">
+                            <h3>📌 バージョン・更新履歴</h3>
+                            <div class="version-content" id="versionContent">
+                                読み込み中…
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+
+                <!-- 💬 右下のチャット起動ボタン（ホーム内） -->
+                <button class="chat-float-btn" id="openChatBtn">
+                    💬 部内チャット
+                </button>
+            </div>
+
+            <!-- 地震タブ（iframe埋め込み：Wolfx WebSocket連携ページ） -->
+            <div class="tab-pane" id="earthquake-pane">
+                <iframe src="https://maps.zaritsuri.com/test/" class="full-iframe" allowfullscreen></iframe>
+            </div>
+
+            <!-- 天気タブ -->
+            <div class="tab-pane" id="weather-pane">
+                <div class="container-inner">
+                    <h1 style="margin-bottom: 20px;">☀️ 気象情報・警報一覧</h1>
+                    
+                    <div class="weather-card">
+                        <h3>盛岡地方 3日間天気予報</h3>
+                        <div class="form-group" style="margin-top: 15px; max-width: 300px;">
+                            <label for="weatherCitySelect">対象地域を選択</label>
+                            <select id="weatherCitySelect">
+                                <option value="0320100">盛岡市</option>
+                                <option value="0332200">矢巾町</option>
+                                <option value="0332100">紫波町</option>
+                            </select>
+                        </div>
+                        <div id="weatherForecastContainer" class="weather-forecast-grid">
+                            <div style="color: #666;">天気予報を読み込み中…</div>
+                        </div>
+                    </div>
+
+                    <div class="weather-card">
+                        <h3>岩手県の警報・注意報（ウェザーニュース）</h3>
+                        <div class="weather-iframe-container">
+                            <iframe src="https://weathernews.jp/onebox/warn/iwate/" title="ウェザーニュース 岩手県の警報・注意報"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 情報タブ -->
+            <div class="tab-pane" id="info-pane">
+                <div class="container-inner">
+                    <h1 style="margin-bottom: 20px;">ℹ️ お知らせ・情報</h1>
+                    <div class="info-card" id="infoContentContainer">
+                        <div style="color: #666;">情報を読み込み中…</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 💬 チャットモーダル・ポップアップ -->
+    <div class="chat-modal-overlay" id="chatModalOverlay">
+        <div class="chat-popup-container">
+            <div class="chat-header">
+                <h3>💬 科学部 部内チャット</h3>
+                <button class="chat-close-btn" id="closeChatBtn">&times;</button>
+            </div>
+            <div class="chat-messages-area" id="chatMessagesArea">
+                <div style="text-align: center; color: #888; margin-top: 20px;">メッセージを読み込み中…</div>
+            </div>
+            <div class="chat-input-area">
+                <div class="chat-input-row">
+                    <input type="text" id="chatNameInput" class="chat-name-input" placeholder="名前（例: 太郎）">
+                </div>
+                <div class="chat-input-row">
+                    <input type="text" id="chatTextInput" class="chat-text-input" placeholder="メッセージを入力...">
+                    <button class="chat-send-btn" id="chatSendBtn">送信</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 使い方モーダル -->
+    <div class="modal-overlay" id="helpModal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="margin: 0;">📖 予定管理の使い方</h3>
+                <button class="modal-close-btn" id="closeHelpBtn">&times;</button>
+            </div>
+            <ul>
+                <li><strong>予定の確認:</strong> カレンダー上で科学部の予定を確認できます。</li>
+                <li><strong>祝日の登録:</strong> 予定名の先頭に <code>*</code> を入力すると赤背景（祝日）として登録されます。</li>
+                <li><strong>過去の予定:</strong> 既に終了した過去の予定は自動的にグレーアウト表示されます。</li>
+                <li><strong>予定の追加:</strong> フォームから「予定名」「期間」「時間」を設定して追加します。</li>
+                <li><strong>予定の削除:</strong> カレンダー上の予定をクリックして削除します。</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 📄 行事予定表共通モーダル -->
+    <div class="modal-overlay" id="scheduleModal">
+        <div class="modal-content schedule-modal" id="scheduleModalContent">
+            <div class="schedule-header-row">
+                <h3 id="scheduleTitle">📄 行事予定表</h3>
+                <div class="pdf-controls">
+                    <button class="pdf-control-btn" id="zoomOutBtn" title="縮小">-</button>
+                    <button class="pdf-control-btn" id="zoomResetBtn" title="ズームリセット">100%</button>
+                    <button class="pdf-control-btn" id="zoomInBtn" title="拡大">+</button>
+                    <button class="pdf-control-btn" id="fullscreenBtn" title="全画面表示">⛶ 全画面</button>
+                    <button class="modal-close-btn" id="closeScheduleBtn">&times;</button>
+                </div>
+            </div>
+            <hr style="border: none; border-top: 1px solid #ddd; margin: 10px 0 12px 0;">
+            <div class="pdf-container" id="pdfContainer">
+                <iframe id="pdfFrame" src=""></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- 外部JS読み込み -->
+    <script src="script.js"></script>
 </body>
 </html>

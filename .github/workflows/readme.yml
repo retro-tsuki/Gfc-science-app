@@ -1,0 +1,73 @@
+name: Update README with Recent Changes
+
+on:
+  push:
+    branches:
+      - main  # 必要に応じて対象のブランチに変更してください
+  # pull_request:
+  #   branches:
+    #   - main
+
+permissions:
+  contents: write
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # すべてのコミット履歴を取得するため
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Update README with recent commits
+        run: |
+          python - << 'EOF'
+          import subprocess
+
+          # 直近のコミットログを5件取得 (フォーマット: - コミットメッセージ)
+          result = subprocess.run(
+              ['git', 'log', '-n', '5', '--pretty=format:- %s (%an)'],
+              stdout=subprocess.PIPE,
+              text=True,
+              check=True
+          )
+          commit_logs = result.stdout
+
+          # README.mdを読み込む
+          with open('README.md', 'r', encoding='utf-8') as f:
+              content = f.read()
+
+          # マーカーの位置を確認
+          start_marker = '<!-- AUTO-UPDATE:START -->'
+          end_marker = '<!-- AUTO-UPDATE:END -->'
+
+          if start_marker in content and end_marker in content:
+              start_idx = content.find(start_marker) + len(start_marker)
+              end_idx = content.find(end_marker)
+              
+              # 新しいコンテンツを作成
+              new_section = f"\n{commit_logs}\n"
+              
+              # 置き換え
+              new_content = content[:start_idx] + new_section + content[end_idx:]
+              
+              with open('README.md', 'w', encoding='utf-8') as f:
+                  f.write(new_content)
+              print("README.md updated successfully.")
+          else:
+              print("Markers not found in README.md")
+          EOF
+
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "docs: update README with recent commits [skip ci]"
+          file_pattern: README.md
+          commit_user_name: github-actions[bot]
+          commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com

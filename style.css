@@ -1,0 +1,737 @@
+* { box-sizing: border-box; }
+html, body { 
+    margin: 0; 
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+    background-color: #f0f2f5; 
+    color: #333; 
+}
+
+/* -------------------------------------------------- */
+/* 📱 全体レイアウト（左側縦タブバー ＋ 右側メイン領域） */
+/* -------------------------------------------------- */
+.app-layout {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* 左側縦タブバー */
+.sidebar {
+    width: 72px;
+    background-color: #ffffff;
+    border-right: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 16px;
+    gap: 12px;
+    flex-shrink: 0;
+    z-index: 1000;
+}
+.nav-tab {
+    width: 56px;
+    height: 56px;
+    border: none;
+    background: transparent;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    gap: 2px;
+    color: #555;
+    transition: background 0.2s, color 0.2s;
+}
+.nav-tab:hover {
+    background-color: #f0f2f5;
+}
+.nav-tab.active {
+    background-color: #e7f1ff;
+    color: #007bff;
+}
+.nav-icon {
+    font-size: 20px;
+}
+.nav-label {
+    font-size: 10px;
+    font-weight: bold;
+}
+
+/* 右側メインコンテンツエリア */
+.main-content {
+    flex-grow: 1;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.tab-pane {
+    display: none;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+}
+.tab-pane.active {
+    display: flex;
+    flex-direction: column;
+}
+
+/* 各タブの中身のレイアウト用コンテナ */
+.container-inner {
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 20px 10px;
+}
+
+/* iframe全画面埋め込みスタイル */
+.full-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: #fff;
+}
+
+#calendar { 
+    background: white; 
+    padding: 10px; 
+    border-radius: 12px; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+    min-height: 400px; 
+    margin-bottom: 20px;
+}
+
+/* -------------------------------------------------- */
+/* 🎯 過去予定のグレーアウトスタイル               */
+/* -------------------------------------------------- */
+.fc-event.is-past {
+    background-color: #9e9e9e !important;
+    border-color: #9e9e9e !important;
+    color: #ffffff !important;
+    opacity: 0.6 !important;
+}
+.fc-event.is-past .fc-event-text-block {
+    color: #ffffff !important;
+}
+
+/* -------------------------------------------------- */
+/* 🎯 祝日スタイル（*から始まる予定）                   */
+/* -------------------------------------------------- */
+.fc-event.is-holiday {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: #ffffff !important;
+}
+.fc-event.is-holiday .fc-event-text-block {
+    color: #ffffff !important;
+    font-weight: bold;
+}
+
+/* -------------------------------------------------- */
+/* 🎯 シームレス＆冒頭一時停止 弾幕専用スタイル（カレンダー用） */
+/* -------------------------------------------------- */
+.fc-event {
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    max-width: 100% !important;
+}
+
+.fc-event-main {
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    display: flex !important;
+    align-items: center;
+    width: 100%;
+}
+
+.fc-daygrid-event-dot {
+    flex-shrink: 0;
+    margin-right: 4px;
+}
+
+.fc-event-scroll-wrapper {
+    overflow: hidden;
+    white-space: nowrap;
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.fc-event-scroll-content {
+    display: inline-flex !important;
+    white-space: nowrap !important;
+    will-change: transform;
+}
+
+.fc-event-text-block {
+    display: inline-block;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.fc-event.has-overflow .fc-event-scroll-content {
+    animation: seamless-danmaku-pause 10s linear infinite;
+}
+
+.fc-event:hover .fc-event-scroll-content {
+    animation-play-state: paused;
+}
+
+@keyframes seamless-danmaku-pause {
+    0% { transform: translateX(0%); }
+    15% { transform: translateX(0%); }
+    100% { transform: translateX(-50%); }
+}
+
+/* -------------------------------------------------- */
+/* UI & フォームスタイル                              */
+/* -------------------------------------------------- */
+.form-container {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+.form-container h2 { margin-top: 0; font-size: 1.2rem; }
+.form-group { margin-bottom: 14px; }
+.form-group label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: bold;
+    margin-bottom: 6px;
+    color: #555;
+}
+.form-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+.field-box { flex: 1 1 0%; min-width: 0; }
+.range-separator {
+    width: 28px;
+    flex-shrink: 0;
+    font-weight: bold;
+    color: #666;
+    text-align: center;
+    line-height: 42px;
+    user-select: none;
+}
+input[type="text"], input[type="date"], input[type="time"], select {
+    width: 100%;
+    height: 42px;
+    padding: 0 10px;
+    margin: 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+    background-color: #fff;
+    appearance: none;
+    -webkit-appearance: none;
+}
+input:disabled {
+    background-color: #e9ecef;
+    color: #6c757d;
+    cursor: not-allowed;
+    border-color: #ced4da;
+}
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    user-select: none;
+}
+.checkbox-container input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    margin: 0;
+}
+button.submit-btn {
+    width: 100%;
+    height: 44px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+}
+button.submit-btn:active { background-color: #0056b3; }
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+h1 { margin: 0; font-size: 1.5rem; }
+
+.header-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.help-btn, .schedule-btn, .annual-btn, .weekly-btn {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    cursor: pointer;
+    width: auto;
+}
+.weekly-btn { background-color: #fd7e14; }
+.weekly-btn:active { background-color: #e36d0c; }
+.schedule-btn { background-color: #28a745; }
+.schedule-btn:active { background-color: #218838; }
+.annual-btn { background-color: #17a2b8; }
+.annual-btn:active { background-color: #138496; }
+
+/* -------------------------------------------------- */
+/* 🚨 重要なお知らせバナー用スタイル（独立・低速スクロール） */
+/* -------------------------------------------------- */
+.importance-card {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    max-width: 280px;
+    overflow: hidden;
+    white-space: nowrap;
+    animation: fadeIn 0.3s ease-out;
+}
+.importance-card.importance-yellow {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+.importance-card.importance-red {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+.importance-scroll-wrapper {
+    overflow: hidden;
+    white-space: nowrap;
+    flex-grow: 1;
+    min-width: 0;
+}
+.importance-scroll-content {
+    display: inline-flex;
+    white-space: nowrap;
+    will-change: transform;
+}
+.importance-text-block {
+    display: inline-block;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* 重要なお知らせ専用の低速弾幕アニメーション（15秒・冒頭2秒停止） */
+.importance-card.has-overflow .importance-scroll-content {
+    animation: importance-danmaku-slow 15s linear infinite;
+}
+
+.importance-card:hover .importance-scroll-content {
+    animation-play-state: paused;
+}
+
+@keyframes importance-danmaku-slow {
+    0% { transform: translateX(0%); }
+    12% { transform: translateX(0%); } /* 冒頭約2秒間停止 */
+    100% { transform: translateX(-50%); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 天気カード用スタイル */
+.weather-card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+.weather-forecast-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+.forecast-item {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+}
+.forecast-date {
+    font-weight: bold;
+    color: #007bff;
+    margin-bottom: 8px;
+}
+.forecast-text {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #444;
+    margin-top: 8px;
+    white-space: pre-wrap;
+}
+
+/* ウェザーニュース iframe用ラッパー */
+.weather-iframe-container {
+    margin-top: 15px;
+    width: 100%;
+    height: 500px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e9ecef;
+    background: #fff;
+}
+.weather-iframe-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* 情報カード用スタイル */
+.info-card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+.info-section {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+.info-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+/* -------------------------------------------------- */
+/* 💬 部内チャット フローティングボタン ＆ ポップアップ  */
+/* -------------------------------------------------- */
+.chat-float-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 12px 20px;
+    font-size: 15px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0,123,255,0.4);
+    cursor: pointer;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s, transform 0.2s;
+}
+.chat-float-btn:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+.chat-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 9998;
+    justify-content: flex-end;
+    align-items: flex-end;
+}
+.chat-popup-container {
+    background: #fff;
+    width: 100%;
+    max-width: 420px;
+    height: 85vh;
+    max-height: 600px;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -5px 25px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: slideUp 0.3s ease-out;
+}
+@media (min-width: 600px) {
+    .chat-modal-overlay {
+        justify-content: flex-end;
+        align-items: flex-end;
+        padding: 20px;
+    }
+    .chat-popup-container {
+        border-radius: 16px;
+        height: 550px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+}
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+.chat-header {
+    padding: 14px 18px;
+    background: #007bff;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.chat-header h3 { margin: 0; font-size: 1.1rem; }
+.chat-close-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.chat-messages-area {
+    flex-grow: 1;
+    padding: 14px;
+    overflow-y: auto;
+    background: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.chat-message-item {
+    background: #fff;
+    padding: 10px 14px;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    max-width: 85%;
+    word-break: break-all;
+}
+.chat-message-item.my-message {
+    background: #dcf8c6;
+    align-self: flex-end;
+}
+.chat-msg-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #666;
+    margin-bottom: 4px;
+    gap: 10px;
+}
+.chat-msg-name { font-weight: bold; color: #333; }
+.chat-msg-body { font-size: 0.95rem; color: #222; white-space: pre-wrap; line-height: 1.4; }
+
+.chat-input-area {
+    padding: 12px;
+    background: #fff;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.chat-input-row {
+    display: flex;
+    gap: 8px;
+}
+.chat-name-input { width: 130px; height: 38px; font-size: 14px; padding: 0 8px; border: 1px solid #ccc; border-radius: 6px; }
+.chat-text-input { flex-grow: 1; height: 38px; font-size: 14px; padding: 0 10px; border: 1px solid #ccc; border-radius: 6px; }
+.chat-send-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0 16px;
+    height: 38px;
+    font-weight: bold;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.chat-send-btn:active { background-color: #0056b3; }
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9998;
+    justify-content: center;
+    align-items: center;
+}
+.modal-content {
+    background-color: #fff;
+    width: 90%;
+    max-width: 500px;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    position: relative;
+}
+
+/* -------------------------------------------------- */
+/* 📄 行事予定表モーダル専用カスタムスタイル           */
+/* -------------------------------------------------- */
+.modal-content.schedule-modal {
+    max-width: 850px;
+    height: 88vh;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+.schedule-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.modal-content h3 {
+    margin: 0; font-size: 1.2rem;
+    color: #333;
+}
+.pdf-controls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+.pdf-control-btn {
+    background: #f8f9fa;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #333;
+    transition: background 0.2s;
+}
+.pdf-control-btn:hover { background: #e2e6ea; }
+.pdf-control-btn:active { background: #d6dbdf; }
+
+.pdf-container {
+    flex-grow: 1;
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: auto;
+    background: #f8f9fa;
+    position: relative;
+    -webkit-overflow-scrolling: touch;
+}
+.pdf-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    transform-origin: top left;
+    transition: transform 0.1s ease, width 0.1s ease, height 0.1s ease;
+}
+
+.modal-close-btn {
+    background: #ffffff; 
+    border: 1px solid #ced4da;
+    color: #333333; 
+    font-size: 18px; 
+    font-weight: bold;
+    cursor: pointer; 
+    border-radius: 50%;
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0; line-height: 1;
+    transition: background 0.2s, color 0.2s;
+}
+.modal-close-btn:hover { 
+    background: #e9ecef; 
+    color: #000000;
+}
+
+.modal-content ul { padding-left: 20px; line-height: 1.6; }
+
+/* -------------------------------------------------- */
+/* 📌 バージョンフッターセクションスタイル             */
+/* -------------------------------------------------- */
+.version-footer {
+    margin-top: 30px;
+    margin-bottom: 20px;
+    text-align: left;
+}
+.version-card {
+    background: #fff;
+    padding: 18px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.version-card h3 {
+    margin: 0 0 10px 0;
+    font-size: 1rem;
+    color: #444;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.version-content {
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.6;
+}
+.version-content ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background-color: rgba(255, 255, 255, 0.85);
+    z-index: 999999;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    backdrop-filter: blur(2px);
+}
+.spinner {
+    width: 50px; height: 50px;
+    border: 5px solid #e0e0e0;
+    border-top: 5px solid #007bff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.loading-text {
+    margin-top: 15px; font-size: 16px; font-weight: bold;
+    color: #007bff; letter-spacing: 0.5px; text-align: center; padding: 0 20px;
+}
