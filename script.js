@@ -453,9 +453,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
   async function sendChatMessage() {
     const name = chatNameInput.value.trim() || '名無し';
-    const message = chatTextInput.value.trim();
+    let message = chatTextInput.value.trim();
 
     if (!message) return;
+
+    // 🔴 ここで filter.js の関数を呼び出してNGワードを置換します
+    message = filterChatText(message);
 
     localStorage.setItem('science_club_chat_name', name);
     chatTextInput.disabled = true;
