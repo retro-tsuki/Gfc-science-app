@@ -305,194 +305,254 @@ function formatTimeString(dateInput) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  loadReadmeVersion();
-  loadInfoContent();
-  loadImportance();
+    loadReadmeVersion();
+    loadInfoContent();
+    loadImportance();
 
-  // --- 🧭 タブ切り替えロジック ---
-  const navTabs = document.querySelectorAll('.nav-tab');
-  const tabPanes = document.querySelectorAll('.tab-pane');
+    // --- 🧭 タブ切り替えロジック ---
+    const navTabs = document.querySelectorAll('.nav-tab');
+    const tabPanes = document.querySelectorAll('.tab-pane');
 
-  navTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const targetId = tab.getAttribute('data-target');
+    navTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetId = tab.getAttribute('data-target');
 
-      navTabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
+            navTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
 
-      tabPanes.forEach(pane => {
-        pane.classList.remove('active');
-        if (pane.id === targetId) {
-          pane.classList.add('active');
+            tabPanes.forEach(pane => {
+                pane.classList.remove('active');
+                if (pane.id === targetId) {
+                    pane.classList.add('active');
+                }
+            });
+
+            if (targetId === 'weather-pane') {
+                loadWeatherData();
+            }
+
+            if (targetId === 'home-pane' && window.calendar) {
+                setTimeout(() => window.calendar.updateSize(), 50);
+            }
+        });
+    });
+
+    const weatherCitySelect = document.getElementById('weatherCitySelect');
+    if (weatherCitySelect) {
+        weatherCitySelect.addEventListener('change', (e) => {
+            renderWeatherForecast(e.target.value);
+        });
+    }
+
+    // --- チャット機能関連のロジック ---
+    const openChatBtn = document.getElementById('openChatBtn');
+    const closeChatBtn = document.getElementById('closeChatBtn');
+    const chatModalOverlay = document.getElementById('chatModalOverlay');
+    const chatMessagesArea = document.getElementById('chatMessagesArea');
+    const chatNameInput = document.getElementById('chatNameInput');
+    const chatTextInput = document.getElementById('chatTextInput');
+    const chatSendBtn = document.getElementById('chatSendBtn');
+    const chatImageInput = document.getElementById('chatImageInput');
+    const chatPreviewBox = document.getElementById('chatPreviewBox');
+
+    let chatInterval = null;
+    let selectedChatImageData = '';
+    let selectedChatImageName = '';
+
+    const savedName = localStorage.getItem('science_club_chat_name');
+    if (savedName) {
+        chatNameInput.value = savedName;
+    }
+
+    function clearSelectedChatImage() {
+        selectedChatImageData = '';
+        selectedChatImageName = '';
+        chatImageInput.value = '';
+        chatPreviewBox.innerHTML = '';
+        chatPreviewBox.classList.remove('show');
+        chatPreviewBox.hidden = true;
+    }
+
+    chatImageInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            alert('画像ファイルを選択してください');
+            return;
         }
-      });
 
-      if (targetId === 'weather-pane') {
-        loadWeatherData();
-      }
+        const reader = new FileReader();
+        reader.onload = () => {
+            selectedChatImageData = reader.result;
+            selectedChatImageName = file.name || 'chat-image.png';
 
-      if (targetId === 'home-pane' && window.calendar) {
-        setTimeout(() => window.calendar.updateSize(), 50);
-      }
-    });
-  });
-
-  const weatherCitySelect = document.getElementById('weatherCitySelect');
-  if (weatherCitySelect) {
-    weatherCitySelect.addEventListener('change', (e) => {
-      renderWeatherForecast(e.target.value);
-    });
-  }
-
-  // --- チャット機能関連のロジック ---
-  const openChatBtn = document.getElementById('openChatBtn');
-  const closeChatBtn = document.getElementById('closeChatBtn');
-  const chatModalOverlay = document.getElementById('chatModalOverlay');
-  const chatMessagesArea = document.getElementById('chatMessagesArea');
-  const chatNameInput = document.getElementById('chatNameInput');
-  const chatTextInput = document.getElementById('chatTextInput');
-  const chatSendBtn = document.getElementById('chatSendBtn');
-
-  let chatInterval = null;
-
-  const savedName = localStorage.getItem('science_club_chat_name');
-  if (savedName) {
-    chatNameInput.value = savedName;
-  }
-
-  async function loadChatMessages(scrollToBottom = false) {
-    const cachedChat = localStorage.getItem(CHAT_CACHE_KEY);
-    if (cachedChat) {
-      try {
-        const parsed = JSON.parse(cachedChat);
-        const validMessages = parsed.filter(msg => msg && msg.message && typeof msg.message === 'string' && msg.message.trim() !== '');
-        renderChatMessages(validMessages, scrollToBottom);
-      } catch (e) {
-        console.warn("チャットキャッシュパースエラー:", e);
-      }
-    }
-
-    try {
-      const rawData = await fetchGasApi({ url: `${GAS_WEB_APP_URL}?action=getChat` });
-      if (Array.isArray(rawData)) {
-        const messages = rawData.filter(msg => msg && msg.message && typeof msg.message === 'string' && msg.message.trim() !== '');
-        localStorage.setItem(CHAT_CACHE_KEY, JSON.stringify(messages));
-        renderChatMessages(messages, scrollToBottom);
-      }
-    } catch (err) {
-      console.warn("チャット読み込み失敗:", err);
-    }
-  }
-
-  function renderChatMessages(messages, scrollToBottom) {
-    const currentName = chatNameInput.value.trim();
-    chatMessagesArea.innerHTML = '';
-
-    if (messages.length === 0) {
-      chatMessagesArea.innerHTML = '<div style="text-align: center; color: #888; margin-top: 20px;">まだメッセージはありません。最初のメッセージを送ろう！</div>';
-      return;
-    }
-
-    messages.forEach(msg => {
-      const item = document.createElement('div');
-      item.className = 'chat-message-item';
-      if (currentName && msg.name === currentName) {
-        item.classList.add('my-message');
-      }
-
-      const header = document.createElement('div');
-      header.className = 'chat-msg-header';
-
-      const nameSpan = document.createElement('span');
-      nameSpan.className = 'chat-msg-name';
-      nameSpan.textContent = msg.name || '名無し';
-
-      const timeSpan = document.createElement('span');
-      if (msg.created_at) {
-        const d = new Date(msg.created_at);
-        timeSpan.textContent = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-      }
-
-      header.appendChild(nameSpan);
-      header.appendChild(timeSpan);
-
-      const body = document.createElement('div');
-      body.className = 'chat-msg-body';
-      body.textContent = msg.message;
-
-      item.appendChild(header);
-      item.appendChild(body);
-      chatMessagesArea.appendChild(item);
+            chatPreviewBox.innerHTML = `<img src="${selectedChatImageData}" alt="プレビュー">`;
+            chatPreviewBox.classList.add('show');
+            chatPreviewBox.hidden = false;
+        };
+        reader.onerror = () => {
+            alert('画像の読み込みに失敗しました');
+        };
+        reader.readAsDataURL(file);
     });
 
-    if (scrollToBottom) {
-      chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
-    }
-  }
-
-  openChatBtn.addEventListener('click', () => {
-    chatModalOverlay.style.display = 'flex';
-    loadChatMessages(true);
-    if (!chatInterval) {
-      chatInterval = setInterval(() => loadChatMessages(false), 5000);
-    }
-  });
-
-  function closeChatModal() {
-    chatModalOverlay.style.display = 'none';
-    if (chatInterval) {
-      clearInterval(chatInterval);
-      chatInterval = null;
-    }
-  }
-
-  closeChatBtn.addEventListener('click', closeChatModal);
-  chatModalOverlay.addEventListener('click', (e) => {
-    if (e.target === chatModalOverlay) closeChatModal();
-  });
-
-  async function sendChatMessage() {
-    const name = chatNameInput.value.trim() || '名無し';
-    let message = chatTextInput.value.trim();
-
-    if (!message) return;
-
-    // 🔴 ここで filter.js の関数を呼び出してNGワードを置換します
-    message = filterChatText(message);
-
-    localStorage.setItem('science_club_chat_name', name);
-    chatTextInput.disabled = true;
-    chatSendBtn.disabled = true;
-
-    try {
-      await fetchGasApi({
-        method: 'POST',
-        body: {
-          action: 'insertChat',
-          name: name,
-          message: message
+    async function loadChatMessages(scrollToBottom = false) {
+        const cachedChat = localStorage.getItem(CHAT_CACHE_KEY);
+        if (cachedChat) {
+            try {
+                const parsed = JSON.parse(cachedChat);
+                const validMessages = parsed.filter(msg => msg && (msg.message || msg.imageUrl || msg.image_url || msg.image));
+                renderChatMessages(validMessages, scrollToBottom);
+            } catch (e) {
+                console.warn("チャットキャッシュパースエラー:", e);
+            }
         }
-      });
 
-      chatTextInput.value = '';
-      await loadChatMessages(true);
-    } catch (err) {
-      alert('メッセージの送信に失敗しました');
-    } finally {
-      chatTextInput.disabled = false;
-      chatSendBtn.disabled = false;
-      chatTextInput.focus();
+        try {
+            const rawData = await fetchGasApi({ url: `${GAS_WEB_APP_URL}?action=getChat` });
+            if (Array.isArray(rawData)) {
+                const messages = rawData.filter(msg => msg && (msg.message || msg.imageUrl || msg.image_url || msg.image));
+                localStorage.setItem(CHAT_CACHE_KEY, JSON.stringify(messages));
+                renderChatMessages(messages, scrollToBottom);
+            }
+        } catch (err) {
+            console.warn("チャット読み込み失敗:", err);
+        }
     }
-  }
 
-  chatSendBtn.addEventListener('click', sendChatMessage);
-  chatTextInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      sendChatMessage();
+    function renderChatMessages(messages, scrollToBottom) {
+        const currentName = chatNameInput.value.trim();
+        chatMessagesArea.innerHTML = '';
+
+        if (messages.length === 0) {
+            chatMessagesArea.innerHTML = '<div style="text-align: center; color: #888; margin-top: 20px;">まだメッセージはありません。最初のメッセージを送ろう！</div>';
+            return;
+        }
+
+        messages.forEach(msg => {
+            const item = document.createElement('div');
+            item.className = 'chat-message-item';
+            if (currentName && msg.name === currentName) {
+                item.classList.add('my-message');
+            }
+
+            const header = document.createElement('div');
+            header.className = 'chat-msg-header';
+
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'chat-msg-name';
+            nameSpan.textContent = msg.name || '名無し';
+
+            const timeSpan = document.createElement('span');
+            if (msg.created_at) {
+                const d = new Date(msg.created_at);
+                timeSpan.textContent = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+            }
+
+            header.appendChild(nameSpan);
+            header.appendChild(timeSpan);
+
+            const body = document.createElement('div');
+            body.className = 'chat-msg-body';
+
+            if (msg.message && msg.message.trim() !== '') {
+                const textNode = document.createElement('div');
+                textNode.textContent = msg.message;
+                body.appendChild(textNode);
+            }
+
+            const imageUrl = msg.imageUrl || msg.image_url || msg.image || '';
+            if (imageUrl) {
+                const imageEl = document.createElement('img');
+                imageEl.className = 'chat-msg-image';
+                imageEl.src = imageUrl;
+                imageEl.alt = '添付画像';
+                body.appendChild(imageEl);
+            }
+
+            item.appendChild(header);
+            item.appendChild(body);
+            chatMessagesArea.appendChild(item);
+        });
+
+        if (scrollToBottom) {
+            chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
+        }
     }
-  });
 
+    openChatBtn.addEventListener('click', () => {
+        chatModalOverlay.style.display = 'flex';
+        loadChatMessages(true);
+        if (!chatInterval) {
+            chatInterval = setInterval(() => loadChatMessages(false), 5000);
+        }
+    });
+
+    function closeChatModal() {
+        chatModalOverlay.style.display = 'none';
+        if (chatInterval) {
+            clearInterval(chatInterval);
+            chatInterval = null;
+        }
+    }
+
+    closeChatBtn.addEventListener('click', closeChatModal);
+    chatModalOverlay.addEventListener('click', (e) => {
+        if (e.target === chatModalOverlay) closeChatModal();
+    });
+
+    async function sendChatMessage() {
+        const name = chatNameInput.value.trim() || '名無し';
+        const textMessage = chatTextInput.value.trim();
+        const hasImage = !!selectedChatImageData;
+
+        if (!textMessage && !hasImage) return;
+
+        let finalMessage = textMessage;
+        if (finalMessage) {
+            finalMessage = filterChatText(finalMessage);
+        }
+
+        localStorage.setItem('science_club_chat_name', name);
+        chatTextInput.disabled = true;
+        chatSendBtn.disabled = true;
+
+        try {
+            await fetchGasApi({
+                method: 'POST',
+                body: {
+                    action: 'insertChat',
+                    name: name,
+                    message: finalMessage,
+                    imageData: selectedChatImageData || '',
+                    imageName: selectedChatImageName || ''
+                }
+            });
+
+            chatTextInput.value = '';
+            clearSelectedChatImage();
+            await loadChatMessages(true);
+
+        } catch (err) {
+            alert('メッセージの送信に失敗しました');
+        } finally {
+            chatTextInput.disabled = false;
+            chatSendBtn.disabled = false;
+            chatTextInput.focus();
+        }
+    }
+
+    chatSendBtn.addEventListener('click', sendChatMessage);
+    chatTextInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendChatMessage();
+        }
+    });
+
+    // ... ここから下は既存のコードをそのまま使う ...
+});
   // --- モーダル関連の処理 ---
   const openHelpBtn = document.getElementById('openHelpBtn');
   const closeHelpBtn = document.getElementById('closeHelpBtn');
