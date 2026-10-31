@@ -162,27 +162,32 @@
         </main>
     </div>
 
-    <!-- 💬 チャットモーダル・ポップアップ -->
-    <div class="chat-modal-overlay" id="chatModalOverlay">
-        <div class="chat-popup-container">
-            <div class="chat-header">
-                <h3>💬 科学部 部内チャット</h3>
-                <button class="chat-close-btn" id="closeChatBtn">&times;</button>
+  <!-- 💬 チャットモーダル・ポップアップ -->
+<div class="chat-modal-overlay" id="chatModalOverlay">
+    <div class="chat-popup-container">
+        <div class="chat-header">
+            <h3>💬 科学部 部内チャット</h3>
+            <button class="chat-close-btn" id="closeChatBtn">&times;</button>
+        </div>
+        <div class="chat-messages-area" id="chatMessagesArea">
+            <div style="text-align: center; color: #888; margin-top: 20px;">メッセージを読み込み中…</div>
+        </div>
+        <div class="chat-input-area">
+            <div class="chat-preview-box" id="chatPreviewBox" hidden></div>
+
+            <div class="chat-input-row">
+                <input type="text" id="chatNameInput" class="chat-name-input" placeholder="名前（例: 太郎）">
             </div>
-            <div class="chat-messages-area" id="chatMessagesArea">
-                <div style="text-align: center; color: #888; margin-top: 20px;">メッセージを読み込み中…</div>
-            </div>
-            <div class="chat-input-area">
-                <div class="chat-input-row">
-                    <input type="text" id="chatNameInput" class="chat-name-input" placeholder="名前（例: 太郎）">
-                </div>
-                <div class="chat-input-row">
-                    <input type="text" id="chatTextInput" class="chat-text-input" placeholder="メッセージを入力...">
-                    <button class="chat-send-btn" id="chatSendBtn">送信</button>
-                </div>
+
+            <div class="chat-input-row chat-input-row--compose">
+                <input type="text" id="chatTextInput" class="chat-text-input" placeholder="メッセージを入力...">
+                <label class="chat-image-btn" for="chatImageInput">画像</label>
+                <input type="file" id="chatImageInput" accept="image/*" hidden>
+                <button class="chat-send-btn" id="chatSendBtn">送信</button>
             </div>
         </div>
     </div>
+</div>
 
     <!-- 使い方モーダル -->
     <div class="modal-overlay" id="helpModal">
